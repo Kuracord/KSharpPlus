@@ -1,0 +1,24 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KSharpPlus", "KSharpPlus\KSharpPlus.csproj", "{7B25F087-C448-49A3-B35B-1974473460CF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KSharpPlus.Test", "KSharpPlus.Test\KSharpPlus.Test.csproj", "{F7964363-CB6D-4389-9B02-F1FFE6F6BD75}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DSharpPlus", "DSharpPlus\DSharpPlus.csproj", "{EB3D8310-DFAD-4295-97F9-82E253647583}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7B25F087-C448-49A3-B35B-1974473460CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B25F087-C448-49A3-B35B-1974473460CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B25F087-C448-49A3-B35B-1974473460CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B25F087-C448-49A3-B35B-1974473460CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7964363-CB6D-4389-9B02-F1FFE6F6BD75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7964363-CB6D-4389-9B02-F1FFE6F6BD75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7964363-CB6D-4389-9B02-F1FFE6F6BD75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7964363-CB6D-4389-9B02-F1FFE6F6BD75}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
