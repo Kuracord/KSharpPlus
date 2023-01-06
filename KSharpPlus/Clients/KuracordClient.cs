@@ -136,7 +136,7 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     /// <returns>The requested Guild.</returns>
     /// <exception cref="Exceptions.NotFoundException">Thrown when the guild does not exist.</exception>
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="Exceptions.ServerErrorException">Thrown when Discord is unable to process the request.</exception>
+    /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
     public async Task<KuracordGuild> GetGuildAsync(ulong id) {
         if (_guilds.TryGetValue(id, out KuracordGuild? guild)) return guild;
 
@@ -163,7 +163,7 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     /// <returns></returns>
     /// <exception cref="Exceptions.NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="Exceptions.ServerErrorException">Thrown when Discord is unable to process the request.</exception>
+    /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
     public async Task<KuracordChannel> GetChannelAsync(ulong guildId, ulong channelId) => 
         InternalGetCachedChannel(channelId, false) ?? await ApiClient.GetChannelAsync(guildId, channelId).ConfigureAwait(false);
 
