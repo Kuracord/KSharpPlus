@@ -1,5 +1,5 @@
 # DSharpPlus
-An unofficial .NET wrapper for the Kuracord API, based off [DSharpPlus](https://github.com/DSharpPlus/DSharpPlus), but rewritten for Kuracord.
+An official .NET wrapper for the Kuracord API, based off [DSharpPlus](https://github.com/DSharpPlus/DSharpPlus), but rewritten for Kuracord.
 
 # Installing
 * The library can be directly referenced from your csproj file. Cloning the repository and referencing the library is as easy as:  
