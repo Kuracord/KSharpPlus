@@ -69,6 +69,12 @@ public class KuracordMember : SnowflakeObject, IEquatable<KuracordMember> {
     [JsonIgnore] public bool IsOwner => Id == Guild.OwnerId;
 
     #endregion
+
+    #region Methods
+
+    public Task<KuracordMember> ModifyAsync(string nickname) => Kuracord.ApiClient.ModifyMemberAsync(_guildId, Id, nickname);
+
+    #endregion
     
     #region Utils
 

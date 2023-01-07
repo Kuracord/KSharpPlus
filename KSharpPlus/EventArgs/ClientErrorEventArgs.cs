@@ -1,4 +1,6 @@
-﻿namespace KSharpPlus.EventArgs; 
+﻿using KSharpPlus.Clients;
+
+namespace KSharpPlus.EventArgs; 
 
 /// <summary>
 /// Represents arguments for <see cref="KuracordClient.ClientErrored"/> event.

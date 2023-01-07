@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace KSharpPlus.Net.Abstractions.Rest; 
 
-internal class RestGuildCreatePayload {
+internal sealed class RestGuildCreatePayload {
     [JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
     public string Name { get; set; }
     
@@ -12,12 +12,13 @@ internal class RestGuildCreatePayload {
 }
 
 internal sealed class RestGuildModifyPayload {
-    [JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
-    public string Name { get; set; }
+    public RestGuildModifyPayload(string name) => Name = name;
+    
+    [JsonProperty("name")] public string Name { get; set; }
     
     //todo: file (icon)
 }
 
 internal sealed class RestGuildMemberModifyPayload {
-    [JsonProperty("nickname")] public string Nickname { get; set; }
+    [JsonProperty("nickname")] public string? Nickname { get; set; }
 }

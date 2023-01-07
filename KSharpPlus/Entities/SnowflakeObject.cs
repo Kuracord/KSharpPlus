@@ -22,8 +22,7 @@ public abstract class SnowflakeObject {
     /// <summary>
     /// Gets the client instance this object is tied to.
     /// </summary>
-    [JsonIgnore]
-    internal BaseKuracordClient Kuracord { get; set; }
+    [JsonIgnore] internal BaseKuracordClient? Kuracord { get; set; }
 
     internal SnowflakeObject() { }
 }

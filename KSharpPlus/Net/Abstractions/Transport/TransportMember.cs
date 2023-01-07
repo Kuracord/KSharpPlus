@@ -1,5 +1,4 @@
-﻿using KSharpPlus.Entities;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace KSharpPlus.Net.Abstractions.Transport; 
 

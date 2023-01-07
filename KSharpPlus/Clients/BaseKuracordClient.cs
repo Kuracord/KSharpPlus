@@ -27,7 +27,7 @@ public abstract class BaseKuracordClient : IDisposable {
     /// <summary>
     /// Gets the current user.
     /// </summary>
-    public KuracordUser? CurrentUser { get; internal set; }
+    public KuracordUser CurrentUser { get; internal set; }
     
     /// <summary>
     /// Gets the cached guilds for this client.
@@ -84,8 +84,10 @@ public abstract class BaseKuracordClient : IDisposable {
             if (ver.Revision > 0) VersionString = $"{verStr}, CI build {ver.Revision}";
         }
     }
-    
-    internal KuracordUser UpdateUserCache(KuracordUser newUser) => UserCache.AddOrUpdate(newUser.Id, newUser, (_, _) => newUser);
+
+    internal bool TryGetCachedUserInternal(ulong userId, out KuracordUser? user) => UserCache.TryGetValue(userId, out user);
+
+    internal KuracordUser UpdateUserCache(KuracordUser newUser) => UserCache.AddOrUpdate(newUser.Id, newUser, (_, _) => newUser);   
     
     public abstract void Dispose();
 }

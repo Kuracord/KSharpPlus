@@ -208,8 +208,8 @@ public sealed partial class KuracordClient {
             gMember.Guild = guild;
             gMember._guildId = gMember.Guild.Id;
 
-            if (gMember.Guild._channels == null || !gMember.Guild._channels.Any()) 
-                gMember.Guild._channels = await ApiClient.GetGuildChannelsAsync(gMember.Guild.Id).ConfigureAwait(false);
+            if (gMember.Guild._channels == null || !gMember.Guild._channels.Any())
+                gMember.Guild._channels = ApiClient.GetChannelsAsync(gMember.Guild.Id).ConfigureAwait(false).GetAwaiter().GetResult().ToList();
 
             foreach (KuracordChannel channel in gMember.Guild.Channels.Values) {
                 channel.Kuracord = this;
@@ -224,7 +224,7 @@ public sealed partial class KuracordClient {
             }
 
             if (gMember.Guild._members == null || !gMember.Guild._members.Any())
-                gMember.Guild._members = await ApiClient.GetGuildMembersAsync(gMember.Guild.Id).ConfigureAwait(false);
+                gMember.Guild._members = ApiClient.GetMembersAsync(gMember.Guild.Id).ConfigureAwait(false).GetAwaiter().GetResult().ToList();
 
             foreach (KuracordMember member in gMember.Guild.Members.Values) {
                 member.Kuracord = this;

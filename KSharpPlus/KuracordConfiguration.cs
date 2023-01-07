@@ -59,7 +59,7 @@ public sealed class KuracordConfiguration {
     /// <summary>
     /// <para>Sets the level of compression for WebSocket traffic.</para>
     /// <para>Disabling this option will increase the amount of traffic sent via WebSocket. Setting <see cref="GatewayCompressionLevel.Payload"/> will enable compression for READY and GUILD_CREATE payloads. Setting <see cref="Stream"/> will enable compression for the entire WebSocket stream, drastically reducing amount of traffic.</para>
-    /// <para>Defaults to <see cref="Stream"/>.</para>
+    /// <para>Defaults to <see cref="GatewayCompressionLevel.Stream"/>.</para>
     /// </summary>
     public GatewayCompressionLevel GatewayCompressionLevel { internal get; set; } = GatewayCompressionLevel.Stream;
 

@@ -1,4 +1,5 @@
-﻿using KSharpPlus.Entities.Guild;
+﻿using KSharpPlus.Clients;
+using KSharpPlus.Entities.Guild;
 using KSharpPlus.Enums.User;
 using KSharpPlus.Net.Abstractions.Transport;
 using Newtonsoft.Json;
@@ -42,6 +43,12 @@ public class KuracordUser : SnowflakeObject, IEquatable<KuracordUser> {
     public virtual string Discriminator { get; internal set; }
     
     /// <summary>
+    /// Gets the user's token. This field will not be null only if the user was get from
+    /// <see cref="KuracordClient.RegisterUserAsync"/> method. 
+    /// </summary>
+    [JsonIgnore] public virtual string? Token { get; internal set; }
+    
+    /// <summary>
     /// Gets the user's biography.
     /// </summary>
     [JsonProperty("bio", NullValueHandling = NullValueHandling.Ignore)]
@@ -59,27 +66,25 @@ public class KuracordUser : SnowflakeObject, IEquatable<KuracordUser> {
     public virtual bool IsBot { get; internal set; }
     
     /// <summary>
-    /// Gets whether the user is disabled.
+    /// Gets whether the user is disabled. Only for the current user.
     /// </summary>
     [JsonProperty("disabled", NullValueHandling = NullValueHandling.Ignore)]
-    public virtual bool Disabled { get; internal set; }
+    public virtual bool? Disabled { get; internal set; }
 
     /// <summary>
-    /// Gets whether the user is verified.
-    /// <para>This is only present in OAuth.</para>
+    /// Gets whether the user is verified. Only for the current user.
     /// </summary>
     [JsonProperty("verified", NullValueHandling = NullValueHandling.Ignore)]
     public virtual bool? Verified { get; internal set; }
 
     /// <summary>
-    /// Gets the user's email address.
-    /// <para>This is only present in OAuth.</para>
+    /// Gets the user's email address. Only for the current user.
     /// </summary>
     [JsonProperty("email", NullValueHandling = NullValueHandling.Ignore)]
-    public virtual string Email { get; internal set; }
+    public virtual string? Email { get; internal set; }
 
     /// <summary>
-    /// Gets the user's premium type.
+    /// Gets the user's premium type. Only for the current user.
     /// </summary>
     [JsonProperty("premiumType", NullValueHandling = NullValueHandling.Ignore)]
     public virtual PremiumType? PremiumType { get; internal set; }
@@ -91,15 +96,15 @@ public class KuracordUser : SnowflakeObject, IEquatable<KuracordUser> {
     public virtual UserFlags? Flags { get; internal set; }
     
     /// <summary>
-    /// Gets user's guilds.
+    /// Gets user's guilds. Only for the current user.
     /// </summary>
     [JsonProperty("guilds", NullValueHandling = NullValueHandling.Ignore)]
-    public virtual IReadOnlyList<KuracordMember> GuildsMember { get; internal set; }
+    public virtual IReadOnlyList<KuracordMember>? GuildsMember { get; internal set; }
 
     /// <summary>
     /// Gets the user's mention string.
     /// </summary>
-    [JsonIgnore] public string Mention => Formatter.Mention(this, this is KuracordMember);
+    [JsonIgnore] public string Mention => Formatter.Mention(this);
 
     /// <summary>
     /// Gets whether this user is the Client which created this object.
