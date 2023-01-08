@@ -143,9 +143,9 @@ public sealed partial class KuracordClient {
                 CreationTimestamp = gld.CreationTimestamp,
                 ShortName = gld.ShortName,
                 _isSynced = gld._isSynced,
-                _channels = new List<KuracordChannel>(),
-                _members = new List<KuracordMember>(),
-                _roles = new List<KuracordRole>()
+                _channels = gld._channels,
+                _members = gld._members,
+                _roles = gld._roles
             };
 
             gld._channels ??= new List<KuracordChannel>();

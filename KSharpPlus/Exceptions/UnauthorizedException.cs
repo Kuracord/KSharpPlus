@@ -7,7 +7,7 @@ namespace KSharpPlus.Exceptions;
 /// Represents an exception thrown when requester doesn't have necessary permissions to complete the request.
 /// </summary>
 public class UnauthorizedException : KuracordException {
-    internal UnauthorizedException(BaseRestRequest request, RestResponse response) : base($"Unauthorized: {response.ResponseCode}") {
+    internal UnauthorizedException(BaseRestRequest request, RestResponse response) : base($"Unauthorized: {response.ResponseCode}; {JObject.Parse(response.Response)["message"]}") {
         WebRequest = request;
         WebResponse = response;
 

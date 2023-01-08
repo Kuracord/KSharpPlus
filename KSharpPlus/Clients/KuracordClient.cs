@@ -11,7 +11,6 @@ using KSharpPlus.EventArgs.Guild;
 using KSharpPlus.EventArgs.Socket;
 using KSharpPlus.Exceptions;
 using KSharpPlus.Logging;
-using KSharpPlus.Net.Abstractions.Transport;
 using KSharpPlus.Net.Serialization;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -38,6 +37,12 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     /// </summary>
     public override IReadOnlyDictionary<ulong, KuracordGuild> Guilds { get; }
     internal ConcurrentDictionary<ulong, KuracordGuild> _guilds = new();
+    
+    /// <summary>
+    /// Gets the WS latency for this client.
+    /// </summary>
+    public int Ping => Volatile.Read(ref _ping);
+    int _ping;
 
     #endregion
 
@@ -150,14 +155,7 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     public async Task<KuracordGuild> GetGuildAsync(ulong id) {
         if (_guilds.TryGetValue(id, out KuracordGuild? guild)) return guild;
 
-        guild = await ApiClient.GetGuildAsync(id).ConfigureAwait(false);
-        IReadOnlyList<KuracordChannel> channels = await ApiClient.GetChannelsAsync(guild.Id).ConfigureAwait(false);
-
-        foreach (KuracordChannel channel in channels)
-            if (!guild._channels.Exists(c => c.Id == channel.Id))
-                guild._channels.Add(channel);
-
-        return guild;
+        return await ApiClient.GetGuildAsync(id).ConfigureAwait(false);
     }
 
     public Task<KuracordGuild> JoinGuildAsync(string inviteCode) => ApiClient.AcceptInviteAsync(inviteCode);
@@ -258,9 +256,9 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     public async Task<KuracordChannel> GetChannelAsync(ulong guildId, ulong channelId) => 
         InternalGetCachedChannel(channelId, false) ?? await ApiClient.GetChannelAsync(guildId, channelId).ConfigureAwait(false);
 
-    public Task<KuracordChannel> CreateChannelAsync(KuracordGuild guild, string name) => CreateChannelAsync(guild.Id, name);
+    public Task<KuracordChannel> CreateTextChannelAsync(KuracordGuild guild, string name) => CreateTextChannelAsync(guild.Id, name);
 
-    public Task<KuracordChannel> CreateChannelAsync(ulong guildId, string name) => ApiClient.CreateChannelAsync(guildId, name);
+    public Task<KuracordChannel> CreateTextChannelAsync(ulong guildId, string name) => ApiClient.CreateChannelAsync(guildId, name);
 
     #endregion
 
@@ -372,15 +370,12 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     public Task<KuracordUser> UpdateCurrentUserAsync(string username, string? discriminator = null) => ApiClient.ModifyCurrentUserAsync(username, discriminator!);
 
     /// <summary>
-    /// Deletes current user. THIS ACTION CANNOT BE UNDONE.
+    /// Disables current user. THIS ACTION CANNOT BE UNDONE.
     /// </summary>
     /// <exception cref="Exceptions.NotFoundException">Thrown when the user does not exist.</exception>
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
     /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
-    public Task DeleteCurrentUserAsync(bool confirm1, bool confirm2, bool confirm3) {
-        if (confirm1 && confirm2 && confirm3) return ApiClient.DeleteCurrentUserAsync();
-        return null!;
-    }
+    public Task DisableCurrentUserAsync() => ApiClient.DisableCurrentUserAsync();
 
     /// <summary>
     /// Registers a new user.
@@ -410,9 +405,11 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     #region Internal Caching Methods
     
     internal KuracordChannel? InternalGetCachedChannel(ulong channelId, bool throwException = true) {
-        foreach (KuracordGuild guild in Guilds.Values)
-            if (guild.Channels.TryGetValue(channelId, out KuracordChannel? foundChannel))
-                return foundChannel;
+        foreach (KuracordGuild guild in Guilds.Values) {
+            guild.Kuracord ??= this;
+            
+            if (guild.Channels.TryGetValue(channelId, out KuracordChannel? foundChannel)) return foundChannel;
+        }
 
         if (throwException)
             throw new KeyNotFoundException($"Cannot find channel with id {channelId}.");
@@ -420,7 +417,7 @@ public sealed partial class KuracordClient : BaseKuracordClient {
         return null;
     }
 
-    void UpdateCachedGuild(KuracordGuild newGuild, JArray rawMembers) {
+    void UpdateCachedGuild(KuracordGuild newGuild, JArray? rawMembers) {
         if (_disposed) return;
 
         newGuild._channels ??= new List<KuracordChannel>();
@@ -432,25 +429,31 @@ public sealed partial class KuracordClient : BaseKuracordClient {
         KuracordGuild guild = _guilds[newGuild.Id];
 
         if (newGuild._channels.Any())
-            foreach (KuracordChannel channel in newGuild._channels.Where(channel => !guild._channels!.Exists(c => c.Id == channel.Id)))
+            foreach (KuracordChannel channel in newGuild._channels.Where(channel => !guild._channels!.Exists(c => c.Id == channel.Id))) {
+                channel.Kuracord = this;
+                channel.GuildId = guild.Id;
+                
                 guild._channels!.Add(channel);
+            }
+                
 
         if (rawMembers != null) {
             guild._members ??= new List<KuracordMember>();
             guild._members.Clear();
 
             foreach (JToken rawMember in rawMembers) {
-                TransportMember transMember = rawMember.ToKuracordObject<TransportMember>();
-                KuracordUser user = new(transMember.User) { Kuracord = this };
+                KuracordMember member = rawMember.ToKuracordObject<KuracordMember>();
+                member.Kuracord = this;
+                member._guildId = guild.Id;
 
-                UpdateUserCache(user);
-
-                guild._members.Add(new KuracordMember(transMember) { Kuracord = this, _guildId = guild.Id });
+                UpdateUserCache(member.User);
+                
+                if (!guild._members!.Exists(m => m.Id == member.Id)) guild._members.Add(member);
             }
         }
         
         if (newGuild._roles.Any())
-            foreach (KuracordRole role in newGuild._roles) {
+            foreach (KuracordRole role in newGuild._roles.Where(role => !guild._roles!.Exists(r => r.Id == role.Id))) {
                 role.Kuracord = this;
                 role._guild_id = newGuild.Id;
                 

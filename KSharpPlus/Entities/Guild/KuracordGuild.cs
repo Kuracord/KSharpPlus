@@ -65,9 +65,7 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
         get {
             _channels ??= GetChannelsAsync().ConfigureAwait(false).GetAwaiter().GetResult().ToList();
             
-            ConcurrentDictionary<ulong, KuracordChannel> channels = new();
-            foreach (KuracordChannel channel in _channels) channels.TryAdd(channel.Id, channel);
-            return new ReadOnlyConcurrentDictionary<ulong, KuracordChannel>(channels);
+            return new ReadOnlyConcurrentDictionary<ulong, KuracordChannel>(new ConcurrentDictionary<ulong, KuracordChannel>(_channels.ToDictionary(c => c.Id)));
         }
     }
 
@@ -81,9 +79,7 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
         get {
             _members ??= GetMembersAsync().ConfigureAwait(false).GetAwaiter().GetResult().ToList();
 
-            ConcurrentDictionary<ulong, KuracordMember> members = new();
-            foreach (KuracordMember member in _members) members.TryAdd(member.Id, member);
-            return new ReadOnlyConcurrentDictionary<ulong, KuracordMember>(members);
+            return new ReadOnlyConcurrentDictionary<ulong, KuracordMember>(new ConcurrentDictionary<ulong, KuracordMember>(_members.ToDictionary(m => m.Id)));
         }
     }
 
@@ -97,9 +93,7 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
         get {
             _roles ??= new List<KuracordRole>();
             
-            ConcurrentDictionary<ulong, KuracordRole> roles = new();
-            foreach (KuracordRole role in _roles) roles.TryAdd(role.Id, role);
-            return new ReadOnlyConcurrentDictionary<ulong, KuracordRole>(roles);
+            return new ReadOnlyConcurrentDictionary<ulong, KuracordRole>(new ConcurrentDictionary<ulong, KuracordRole>(_roles.ToDictionary(r => r.Id)));
         }
     }
 
@@ -113,7 +107,7 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     #region Methods
 
     /// <summary>
-    /// Gets guild's icon URL, in requested format and size.
+    /// Gets guild's icon URL.
     /// </summary>
     /// <returns>The URL of the guild's icon.</returns>
     public string GetIconUrl() => string.IsNullOrWhiteSpace(IconHash) ? null! : $"https://cdn.kuracord.tk/icons/{Id}/{IconHash}";
@@ -131,7 +125,11 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
             ? channel
             : await Kuracord.ApiClient.GetChannelAsync(Id, channelId).ConfigureAwait(false);
 
-    public async Task<IReadOnlyList<KuracordMember>> GetMembersAsync() => await Kuracord.ApiClient.GetMembersAsync(Id);
+    public Task<IReadOnlyList<KuracordMember>> GetMembersAsync() => Kuracord.ApiClient.GetMembersAsync(Id);
+
+    public Task<KuracordMember> ModifyMemberAsync(KuracordMember member, string? nickname) => ModifyMemberAsync(member.Id, nickname);
+
+    public Task<KuracordMember> ModifyMemberAsync(ulong memberId, string? nickname) => Kuracord.ApiClient.ModifyMemberAsync(Id, memberId, nickname);
 
     public KuracordRole GetRole(ulong roleId) => Roles.TryGetValue(roleId, out KuracordRole? role) ? role : null!;
 

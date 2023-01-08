@@ -8,7 +8,7 @@ namespace KSharpPlus.Exceptions;
 /// </summary>
 public class RequestSizeException : KuracordException {
     internal RequestSizeException(BaseRestRequest request, RestResponse response) 
-        : base($"Request entity too large: {response.ResponseCode}. Make sure the data sent is within Kuracord's upload limit.") {
+        : base($"Request entity too large: {response.ResponseCode}; {JObject.Parse(response.Response)["message"]}.\nMake sure the data sent is within Kuracord's upload limit.") {
         WebRequest = request;
         WebResponse = response;
 

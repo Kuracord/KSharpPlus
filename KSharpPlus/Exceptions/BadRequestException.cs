@@ -17,7 +17,7 @@ public class BadRequestException : KuracordException {
     /// </summary>
     public string Errors { get; internal set; }
 
-    internal BadRequestException(BaseRestRequest request, RestResponse response) : base($"Bad request: {response.ResponseCode}") {
+    internal BadRequestException(BaseRestRequest request, RestResponse response) : base($"Bad request: {response.ResponseCode}; {JObject.Parse(response.Response)["message"]}") {
         WebRequest = request;
         WebResponse = response;
 

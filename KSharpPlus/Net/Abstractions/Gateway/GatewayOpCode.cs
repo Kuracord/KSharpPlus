@@ -32,5 +32,10 @@ public enum GatewayOpCode {
     /// <summary>
     /// Used for pinging the gateway to ensure the connection is still alive.
     /// </summary>
-    Heartbeat = 5
+    Heartbeat = 5,
+    
+    /// <summary>
+    /// Used to acknowledge a heartbeat.
+    /// </summary>
+    HeartbeatAck = 6
 }

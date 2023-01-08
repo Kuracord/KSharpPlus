@@ -87,6 +87,12 @@ public class KuracordChannel : SnowflakeObject, IEquatable<KuracordChannel> {
     #endregion
     
     #region Utils
+    
+    /// <summary>
+    /// Returns a string representation of this channel.
+    /// </summary>
+    /// <returns>String representation of this channel.</returns>
+    public override string ToString() => $"Channel {Id}; {Name}";
 
     /// <summary>
     /// Checks whether this <see cref="KuracordChannel" /> is equal to another object.

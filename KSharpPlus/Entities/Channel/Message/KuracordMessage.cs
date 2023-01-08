@@ -35,10 +35,12 @@ public class KuracordMessage : SnowflakeObject, IEquatable<KuracordMessage> {
     /// </summary>
     [JsonIgnore] public KuracordGuild Guild {
         get {
-            if ((!_guild.Channels.Any() || !_guild.Members.Any()) && Kuracord is KuracordClient client)
-                _guild = client.GetGuildAsync(_guild.Id).ConfigureAwait(false).GetAwaiter().GetResult();
-            
             _guild.Kuracord ??= Kuracord;
+
+            if (_guild.Channels.Any() && _guild.Members.Any() || Kuracord is not KuracordClient client) return _guild;
+
+            _guild = client.GetGuildAsync(_guild.Id).ConfigureAwait(false).GetAwaiter().GetResult();
+            _guild.Kuracord = Kuracord;
 
             return _guild;
         } 

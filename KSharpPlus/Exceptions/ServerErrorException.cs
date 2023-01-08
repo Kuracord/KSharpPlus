@@ -7,7 +7,7 @@ namespace KSharpPlus.Exceptions;
 /// Represents an exception thrown when Kuracord returns an Internal Server Error.
 /// </summary>
 public class ServerErrorException : KuracordException {
-    internal ServerErrorException(BaseRestRequest request, RestResponse response) : base($"Internal Server Error: {response.ResponseCode}") {
+    internal ServerErrorException(BaseRestRequest request, RestResponse response) : base($"Internal Server Error: {response.ResponseCode}; {JObject.Parse(response.Response)["message"]}") {
         WebRequest = request;
         WebResponse = response;
 

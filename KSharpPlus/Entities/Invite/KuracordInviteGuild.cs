@@ -46,18 +46,24 @@ public class KuracordInviteGuild : SnowflakeObject {
     #endregion
 
     #region Methods
+    
+    /// <summary>
+    /// Gets guild's icon URL.
+    /// </summary>
+    /// <returns>The URL of the guild's icon.</returns>
+    public string GetIconUrl() => string.IsNullOrWhiteSpace(IconHash) ? null! : $"https://cdn.kuracord.tk/icons/{Id}/{IconHash}";
 
     public Task<KuracordGuild> AcceptAsync() => Kuracord.ApiClient.AcceptInviteAsync(VanityCode);
 
     #endregion
 
-    #region Guild Methods
+    #region Utils
 
     /// <summary>
-    /// Gets guild's icon URL, in requested format and size.
+    /// Returns a string representation of this invite.
     /// </summary>
-    /// <returns>The URL of the guild's icon.</returns>
-    public string GetIconUrl() => string.IsNullOrWhiteSpace(IconHash) ? null! : $"https://cdn.kuracord.tk/icons/{Id}/{IconHash}";
+    /// <returns>String representation of this invite.</returns>
+    public override string ToString() => $"Invite {VanityCode}; Guild {Id}; {Name}";
 
     #endregion
 }

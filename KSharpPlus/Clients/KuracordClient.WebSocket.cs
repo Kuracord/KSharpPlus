@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Net.NetworkInformation;
 using KSharpPlus.Entities.Channel;
 using KSharpPlus.Entities.Guild;
 using KSharpPlus.Enums;
@@ -157,6 +158,10 @@ public sealed partial class KuracordClient {
             case GatewayOpCode.Ready:
                 await OnReadyAsync((payload.Data as JObject).ToKuracordObject<GatewayReady>()).ConfigureAwait(false);
                 break;
+            
+            case GatewayOpCode.HeartbeatAck:
+                await OnHeartbeatAckAsync().ConfigureAwait(false);
+                break;
 
             default:
                 Logger.LogWarning(LoggerEvents.WebSocketReceive, $"Unknown Kuracord opcode: {payload.OpCode}\nPayload: {payload.Data}");
@@ -203,28 +208,21 @@ public sealed partial class KuracordClient {
 
         foreach (KuracordMember gMember in readyUser.GuildsMember) {
             KuracordGuild guild = await GetGuildAsync(gMember.Guild.Id);
+            guild.Kuracord = this;
             
             gMember.Kuracord = this;
             gMember.Guild = guild;
             gMember._guildId = gMember.Guild.Id;
-
-            if (gMember.Guild._channels == null || !gMember.Guild._channels.Any())
-                gMember.Guild._channels = ApiClient.GetChannelsAsync(gMember.Guild.Id).ConfigureAwait(false).GetAwaiter().GetResult().ToList();
 
             foreach (KuracordChannel channel in gMember.Guild.Channels.Values) {
                 channel.Kuracord = this;
                 channel.GuildId = gMember.Guild.Id;
             }
 
-            if (gMember.Guild._roles == null || !gMember.Guild._roles.Any()) gMember.Guild._roles = new List<KuracordRole>();
-
             foreach (KuracordRole role in gMember.Guild.Roles.Values) {
                 role.Kuracord = this;
                 role._guild_id = gMember.Guild.Id;
             }
-
-            if (gMember.Guild._members == null || !gMember.Guild._members.Any())
-                gMember.Guild._members = ApiClient.GetMembersAsync(gMember.Guild.Id).ConfigureAwait(false).GetAwaiter().GetResult().ToList();
 
             foreach (KuracordMember member in gMember.Guild.Members.Values) {
                 member.Kuracord = this;
@@ -242,6 +240,23 @@ public sealed partial class KuracordClient {
         await _ready.InvokeAsync(this, new ReadyEventArgs()).ConfigureAwait(false);
     }
 
+    internal async Task OnHeartbeatAckAsync() {
+        Interlocked.Decrement(ref _skippedHeartbeats);
+
+        int ping = (int)(DateTime.Now - _lastHeartbeat).TotalMilliseconds;
+        
+        Logger.LogTrace(LoggerEvents.WebSocketReceive, $"Received HEARTBEAT_ACK (OP6, {ping}ms)");
+        
+        Volatile.Write(ref _ping, ping);
+
+        HeartbeatEventArgs args = new() {
+            Ping = Ping,
+            Timestamp = DateTimeOffset.Now
+        };
+
+        await _heartbeated.InvokeAsync(this, args).ConfigureAwait(false);
+    }
+    
     internal async Task HeartbeatLoopAsync() {
         Logger.LogDebug(LoggerEvents.Heartbeat, "Heartbeat task started");
         
@@ -273,7 +288,7 @@ public sealed partial class KuracordClient {
             };
             
             await _zombied.InvokeAsync(this, args).ConfigureAwait(false);
-            await InternalReconnectAsync(code: 4001, message: "Too many heartbeats missed").ConfigureAwait(false);
+            await InternalReconnectAsync(false, 4001, "Too many heartbeats missed").ConfigureAwait(false);
 
             return;
         }
@@ -298,7 +313,7 @@ public sealed partial class KuracordClient {
 
         _lastHeartbeat = DateTimeOffset.Now;
 
-        await _heartbeated.InvokeAsync(this, new HeartbeatEventArgs { Timestamp = DateTimeOffset.Now }).ConfigureAwait(false);
+        Interlocked.Increment(ref _skippedHeartbeats);
     }
 
     internal async Task SendIdentifyAsync() {
