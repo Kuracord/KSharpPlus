@@ -199,14 +199,14 @@ public class WebSocketClient : IWebSocketClient {
                         await _ws.CloseOutputAsync(code, result.CloseStatusDescription, CancellationToken.None).ConfigureAwait(false);
                     }
 
-                    await _disconnected.InvokeAsync(this, new SocketCloseEventArgs { CloseCode = (int)result.CloseStatus, CloseMessage = result.CloseStatusDescription }).ConfigureAwait(false);
+                    await _disconnected.InvokeAsync(this, new SocketCloseEventArgs((int)result.CloseStatus!, result.CloseStatusDescription!)).ConfigureAwait(false);
 
                     break;
                 }
             }
         } catch (Exception ex) {
-            await _exceptionThrown.InvokeAsync(this, new SocketErrorEventArgs { Exception = ex }).ConfigureAwait(false);
-            await _disconnected.InvokeAsync(this, new SocketCloseEventArgs { CloseCode = -1, CloseMessage = "" }).ConfigureAwait(false);
+            await _exceptionThrown.InvokeAsync(this, new SocketErrorEventArgs(ex)).ConfigureAwait(false);
+            await _disconnected.InvokeAsync(this, new SocketCloseEventArgs(-1, "")).ConfigureAwait(false);
         }
 
         // Don't await or you deadlock
@@ -265,7 +265,7 @@ public class WebSocketClient : IWebSocketClient {
 
     void EventErrorHandler<TArgs>(AsyncEvent<WebSocketClient, TArgs> asyncEvent, Exception ex, AsyncEventHandler<WebSocketClient, TArgs> handler, WebSocketClient sender, TArgs eventArgs)
         where TArgs : AsyncEventArgs
-        => _exceptionThrown.InvokeAsync(this, new SocketErrorEventArgs { Exception = ex }).ConfigureAwait(false).GetAwaiter().GetResult();
+        => _exceptionThrown.InvokeAsync(this, new SocketErrorEventArgs(ex)).ConfigureAwait(false).GetAwaiter().GetResult();
 
     #endregion
 }

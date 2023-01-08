@@ -9,12 +9,15 @@ public class HeartbeatEventArgs : KuracordEventArgs {
     /// <summary>
     /// Gets the round-trip time of the heartbeat.
     /// </summary>
-    public int Ping { get; internal set; }
+    public int Ping { get; }
     
     /// <summary>
     /// Gets the timestamp of the heartbeat.
     /// </summary>
-    public DateTimeOffset Timestamp { get; internal set; }
+    public DateTimeOffset Timestamp { get; }
 
-    internal HeartbeatEventArgs() { }
+    internal HeartbeatEventArgs(int ping, DateTimeOffset timestamp) {
+        Ping = ping;
+        Timestamp = timestamp;
+    }
 }

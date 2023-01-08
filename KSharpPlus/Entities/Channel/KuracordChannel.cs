@@ -33,16 +33,20 @@ public class KuracordChannel : SnowflakeObject, IEquatable<KuracordChannel> {
     /// </summary>
     [JsonIgnore] public KuracordGuild? Guild {
         get {
-            KuracordClient client = (KuracordClient)Kuracord;
+            KuracordClient client = (KuracordClient)Kuracord!;
             
             if (_guild == null) {
                 if (GuildId.HasValue)
-                    _guild = Kuracord.Guilds.TryGetValue(GuildId.Value, out KuracordGuild? guild) ? guild
+                    _guild = Kuracord!.Guilds.TryGetValue(GuildId.Value, out KuracordGuild? guild) ? guild
                         : client.GetGuildAsync(GuildId.Value).ConfigureAwait(false).GetAwaiter().GetResult();
                 else return null;
             }
 
-            if (_guild.Owner == null && GuildId != null) _guild = client.GetGuildAsync(GuildId.Value).ConfigureAwait(false).GetAwaiter().GetResult();
+            if (_guild != null && !GuildId.HasValue) GuildId = _guild.Id;
+
+            if (_guild!.Owner == null! && GuildId != null) _guild = client.GetGuildAsync(GuildId.Value).ConfigureAwait(false).GetAwaiter().GetResult();
+
+            _guild.Kuracord = Kuracord;
 
             return _guild;
         }

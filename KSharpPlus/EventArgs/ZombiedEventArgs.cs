@@ -9,12 +9,15 @@ public class ZombiedEventArgs : KuracordEventArgs {
     /// <summary>
     /// Gets how many heartbeat failures have occured.
     /// </summary>
-    public int Failures { get; internal set; }
+    public int Failures { get; }
 
     /// <summary>
     /// Gets whether the zombie event occured whilst guilds are downloading.
     /// </summary>
-    public bool GuildDownloadCompleted { get; internal set; }
+    public bool GuildDownloadCompleted { get; }
 
-    internal ZombiedEventArgs() { }
+    internal ZombiedEventArgs(int failures, bool guildDownloadCompleted) {
+        Failures = failures;
+        GuildDownloadCompleted = guildDownloadCompleted;
+    }
 }

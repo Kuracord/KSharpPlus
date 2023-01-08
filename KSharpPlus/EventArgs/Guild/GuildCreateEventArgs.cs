@@ -10,7 +10,7 @@ public class GuildCreateEventArgs : KuracordEventArgs {
     /// <summary>
     /// Gets the guild that was created.
     /// </summary>
-    public KuracordGuild Guild { get; internal set; }
+    public KuracordGuild Guild { get; }
 
-    internal GuildCreateEventArgs() { }
+    internal GuildCreateEventArgs(KuracordGuild guild) => Guild = guild;
 }

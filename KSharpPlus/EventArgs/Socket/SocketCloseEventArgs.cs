@@ -9,12 +9,17 @@ public class SocketCloseEventArgs : KuracordEventArgs {
     /// <summary>
     /// Gets the close code sent by remote host.
     /// </summary>
-    public int CloseCode { get; internal set; }
+    public int CloseCode { get; }
 
     /// <summary>
     /// Gets the close message sent by remote host.
     /// </summary>
-    public string CloseMessage { get; internal set; }
+    public string CloseMessage { get; }
+
+    internal SocketCloseEventArgs(int closeCode, string closeMessage) {
+        CloseCode = closeCode;
+        CloseMessage = closeMessage;
+    }
 }
 
 /// <summary>
@@ -24,5 +29,7 @@ public class SocketErrorEventArgs : KuracordEventArgs {
     /// <summary>
     /// Gets the exception thrown by websocket client.
     /// </summary>
-    public Exception Exception { get; internal set; }
+    public Exception Exception { get; }
+
+    internal SocketErrorEventArgs(Exception exception) => Exception = exception;
 }

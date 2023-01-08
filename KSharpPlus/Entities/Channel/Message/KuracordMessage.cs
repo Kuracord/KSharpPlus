@@ -71,8 +71,8 @@ public class KuracordMessage : SnowflakeObject, IEquatable<KuracordMessage> {
     /// </summary>
     [JsonIgnore] public KuracordMember Member {
         get {
-            _member.User ??= Author;
-            _member.Kuracord ??= Kuracord;
+            _member.User = Author;
+            _member.Kuracord = Kuracord;
             return _member;
         }
     }

@@ -7,5 +7,5 @@ public class SocketEventArgs : KuracordEventArgs {
     /// <summary>
     /// Creates a new event argument container.
     /// </summary>
-    public SocketEventArgs() { }
+    internal SocketEventArgs() { }
 }

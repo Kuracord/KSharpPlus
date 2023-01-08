@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using System.Net;
+﻿using System.Net;
 using KSharpPlus.Clients;
 using KSharpPlus.Entities;
 using KSharpPlus.Entities.Channel;
@@ -75,21 +74,24 @@ public sealed class KuracordApiClient {
         Uri uri = Utilities.GetApiUriFor($"{Endpoints.Guilds}/{guildId}");
 
         RestResponse rest = await DoRequestAsync(Kuracord, uri, RestRequestMethod.GET).ConfigureAwait(false);
-
-        JObject guildObj = JObject.Parse(rest.Response);
-        JArray rawMembers = (JArray)guildObj["members"]!;
-        KuracordGuild guild = guildObj.ToKuracordObject<KuracordGuild>();
+        
+        KuracordGuild guild = JsonConvert.DeserializeObject<KuracordGuild>(rest.Response)!;
 
         foreach (KuracordRole role in guild._roles ??= new List<KuracordRole>()) {
             role.Kuracord = Kuracord;
             role._guild_id = guild.Id;
         }
 
-        if (Kuracord is KuracordClient client) {
-            await client.OnGuildUpdateEventAsync(guild, rawMembers).ConfigureAwait(false);
-            return client._guilds[guild.Id];
+        foreach (KuracordMember member in guild._members ??= new List<KuracordMember>()) {
+            member.Kuracord = Kuracord;
+            member._guildId = guild.Id;
         }
-        
+
+        foreach (KuracordChannel channel in guild._channels ??= new List<KuracordChannel>()) {
+            channel.Kuracord = Kuracord;
+            channel.GuildId = guild.Id;
+        }
+
         guild.Kuracord = Kuracord;
         return guild;
     }
@@ -104,9 +106,24 @@ public sealed class KuracordApiClient {
 
         RestResponse rest = await DoRequestAsync(Kuracord, uri, RestRequestMethod.POST, null, KuracordJson.SerializeObject(payload)).ConfigureAwait(false);
 
-        JObject guildObj = JObject.Parse(rest.Response);
-        JArray rawMembers = (JArray)guildObj["members"]!;
-        KuracordGuild guild = guildObj.ToKuracordObject<KuracordGuild>();
+        KuracordGuild guild = JsonConvert.DeserializeObject<KuracordGuild>(rest.Response)!;
+        
+        foreach (KuracordRole role in guild._roles ??= new List<KuracordRole>()) {
+            role.Kuracord = Kuracord;
+            role._guild_id = guild.Id;
+        }
+
+        foreach (KuracordMember member in guild._members ??= new List<KuracordMember>()) {
+            member.Kuracord = Kuracord;
+            member._guildId = guild.Id;
+        }
+
+        foreach (KuracordChannel channel in guild._channels ??= new List<KuracordChannel>()) {
+            channel.Kuracord = Kuracord;
+            channel.GuildId = guild.Id;
+        }
+        
+        guild.Kuracord = Kuracord;
 
         return guild;
     }
@@ -118,13 +135,23 @@ public sealed class KuracordApiClient {
 
         RestResponse rest = await DoRequestAsync(Kuracord, uri, RestRequestMethod.PATCH, null, KuracordJson.SerializeObject(payload)).ConfigureAwait(false);
 
-        JObject guildObj = JObject.Parse(rest.Response);
-        JArray rawMembers = (JArray)guildObj["members"]!;
-        KuracordGuild guild = guildObj.ToKuracordObject<KuracordGuild>();
+        KuracordGuild guild = JsonConvert.DeserializeObject<KuracordGuild>(rest.Response)!;
 
-        foreach (KuracordRole role in guild._roles ??= new List<KuracordRole>()) role._guild_id = guild.Id;
+        foreach (KuracordRole role in guild._roles ??= new List<KuracordRole>()) {
+            role.Kuracord = Kuracord;
+            role._guild_id = guild.Id;
+        }
 
-        if (Kuracord is KuracordClient client) await client.OnGuildUpdateEventAsync(guild, rawMembers).ConfigureAwait(false);
+        foreach (KuracordMember member in guild._members ??= new List<KuracordMember>()) {
+            member.Kuracord = Kuracord;
+            member._guildId = guild.Id;
+        }
+
+        foreach (KuracordChannel channel in guild._channels ??= new List<KuracordChannel>()) {
+            channel.Kuracord = Kuracord;
+            channel.GuildId = guild.Id;
+        }
+
         return guild;
     }
 

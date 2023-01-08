@@ -15,10 +15,10 @@ public class GuildUpdateEventArgs : KuracordEventArgs {
     /// <summary>
     /// Gets the guild before it was updated.
     /// </summary>
-    public KuracordGuild GuildBefore { get; internal set; }
+    public KuracordGuild GuildBefore { get; }
 
     /// <summary>
     /// Gets the guild after it was updated.
     /// </summary>
-    public KuracordGuild GuildAfter { get; internal set; }
+    public KuracordGuild GuildAfter { get; }
 }

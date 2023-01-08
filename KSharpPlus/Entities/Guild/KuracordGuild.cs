@@ -65,6 +65,8 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
         get {
             _channels ??= GetChannelsAsync().ConfigureAwait(false).GetAwaiter().GetResult().ToList();
             
+            foreach (KuracordChannel channel in _channels.Where(m => m.Kuracord == null)) channel.Kuracord = Kuracord;
+            
             return new ReadOnlyConcurrentDictionary<ulong, KuracordChannel>(new ConcurrentDictionary<ulong, KuracordChannel>(_channels.ToDictionary(c => c.Id)));
         }
     }
@@ -79,6 +81,8 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
         get {
             _members ??= GetMembersAsync().ConfigureAwait(false).GetAwaiter().GetResult().ToList();
 
+            foreach (KuracordMember member in _members.Where(m => m.Kuracord == null)) member.Kuracord = Kuracord;
+
             return new ReadOnlyConcurrentDictionary<ulong, KuracordMember>(new ConcurrentDictionary<ulong, KuracordMember>(_members.ToDictionary(m => m.Id)));
         }
     }
@@ -92,7 +96,9 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     [JsonIgnore] public IReadOnlyDictionary<ulong, KuracordRole> Roles {
         get {
             _roles ??= new List<KuracordRole>();
-            
+
+            foreach (KuracordRole role in _roles.Where(r => r.Kuracord == null)) role.Kuracord = Kuracord;
+
             return new ReadOnlyConcurrentDictionary<ulong, KuracordRole>(new ConcurrentDictionary<ulong, KuracordRole>(_roles.ToDictionary(r => r.Id)));
         }
     }

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Net.NetworkInformation;
 using KSharpPlus.Entities.Channel;
 using KSharpPlus.Entities.Guild;
 using KSharpPlus.Enums;
@@ -23,8 +22,6 @@ public sealed partial class KuracordClient {
     int _heartbeatInterval;
     DateTimeOffset _lastHeartbeat;
     Task _heartbeatTask;
-
-    internal static readonly DateTimeOffset KuracordEpoch = new(2015, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
     int _skippedHeartbeats;
     long _lastSequence;
@@ -231,7 +228,7 @@ public sealed partial class KuracordClient {
 
             _guilds[gMember.Guild.Id] = gMember.Guild;
 
-            await _guildAvailable.InvokeAsync(this, new GuildCreateEventArgs { Guild = gMember.Guild }).ConfigureAwait(false);
+            await _guildAvailable.InvokeAsync(this, new GuildCreateEventArgs(gMember.Guild)).ConfigureAwait(false);
         }
 
         Volatile.Write(ref _guildDownloadCompleted, true);
@@ -241,18 +238,15 @@ public sealed partial class KuracordClient {
     }
 
     internal async Task OnHeartbeatAckAsync() {
-        Interlocked.Decrement(ref _skippedHeartbeats);
-
         int ping = (int)(DateTime.Now - _lastHeartbeat).TotalMilliseconds;
+        
+        Interlocked.Decrement(ref _skippedHeartbeats);
         
         Logger.LogTrace(LoggerEvents.WebSocketReceive, $"Received HEARTBEAT_ACK (OP6, {ping}ms)");
         
         Volatile.Write(ref _ping, ping);
 
-        HeartbeatEventArgs args = new() {
-            Ping = Ping,
-            Timestamp = DateTimeOffset.Now
-        };
+        HeartbeatEventArgs args = new(Ping, DateTimeOffset.Now);
 
         await _heartbeated.InvokeAsync(this, args).ConfigureAwait(false);
     }
@@ -282,10 +276,7 @@ public sealed partial class KuracordClient {
         if (moreThan5 && guildsDownloadCompleted) {
             Logger.LogCritical(LoggerEvents.HeartbeatFailure, "Server failed to acknowledge more than 5 heartbeats - connection is zombie");
 
-            ZombiedEventArgs args = new() {
-                Failures = Volatile.Read(ref _skippedHeartbeats),
-                GuildDownloadCompleted = true
-            };
+            ZombiedEventArgs args = new(Volatile.Read(ref _skippedHeartbeats), true);
             
             await _zombied.InvokeAsync(this, args).ConfigureAwait(false);
             await InternalReconnectAsync(false, 4001, "Too many heartbeats missed").ConfigureAwait(false);
@@ -294,10 +285,7 @@ public sealed partial class KuracordClient {
         }
 
         if (!guildsDownloadCompleted && moreThan5) {
-            ZombiedEventArgs args = new() {
-                Failures = Volatile.Read(ref _skippedHeartbeats),
-                GuildDownloadCompleted = false
-            };
+            ZombiedEventArgs args = new(Volatile.Read(ref _skippedHeartbeats), false);
             
             await _zombied.InvokeAsync(this, args).ConfigureAwait(false);
             Logger.LogWarning(LoggerEvents.HeartbeatFailure, "Server failed to acknowledge more than 5 heartbeats, but the guild download is still running - check your connection speed");

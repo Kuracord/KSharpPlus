@@ -9,12 +9,15 @@ public class ClientErrorEventArgs : KuracordEventArgs {
     /// <summary>
     /// Gets the exception thrown by the client.
     /// </summary>
-    public Exception Exception { get; internal set; }
+    public Exception Exception { get; }
 
     /// <summary>
     /// Gets the name of the event that threw the exception.
     /// </summary>
-    public string EventName { get; internal set; }
+    public string EventName { get; }
 
-    internal ClientErrorEventArgs() { }
+    internal ClientErrorEventArgs(string eventName, Exception exception) {
+        EventName = eventName;
+        Exception = exception;
+    }
 }

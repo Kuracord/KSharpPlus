@@ -7,7 +7,10 @@ using KSharpPlus.Entities.Guild;
 using KSharpPlus.Entities.Invite;
 using KSharpPlus.Entities.User;
 using KSharpPlus.EventArgs;
+using KSharpPlus.EventArgs.Channel;
 using KSharpPlus.EventArgs.Guild;
+using KSharpPlus.EventArgs.Guild.Member;
+using KSharpPlus.EventArgs.Message;
 using KSharpPlus.EventArgs.Socket;
 using KSharpPlus.Exceptions;
 using KSharpPlus.Logging;
@@ -20,7 +23,7 @@ namespace KSharpPlus.Clients;
 public sealed partial class KuracordClient : BaseKuracordClient {
     #region Internal Fields and Properties
 
-    internal RingBuffer<KuracordMessage> MessageCache { get; }
+    internal RingBuffer<KuracordMessage>? MessageCache { get; }
     
     ManualResetEventSlim ConnectionLock { get; } = new(true); 
 
@@ -69,10 +72,16 @@ public sealed partial class KuracordClient : BaseKuracordClient {
         _guildAvailable = new AsyncEvent<KuracordClient, GuildCreateEventArgs>("GUILD_AVAILABLE", EventExecutionLimit, EventErrorHandler);
         _guildUpdated = new AsyncEvent<KuracordClient, GuildUpdateEventArgs>("GUILD_UPDATED", EventExecutionLimit, EventErrorHandler);
         _guildDownloadCompletedEvent = new AsyncEvent<KuracordClient, GuildDownloadCompletedEventArgs>("GUILD_DOWNLOAD_COMPLETED", EventExecutionLimit, EventErrorHandler);
+        _channelCreated = new AsyncEvent<KuracordClient, ChannelCreateEventArgs>("CHANNEL_CREATED", EventExecutionLimit, EventErrorHandler);
+        _memberJoined = new AsyncEvent<KuracordClient, MemberJoinedEventArgs>("MEMBER_JOINED", EventExecutionLimit, EventErrorHandler);
+        _memberUpdated = new AsyncEvent<KuracordClient, MemberUpdatedEventArgs>("MEMBER_UPDATED", EventExecutionLimit, EventErrorHandler);
+        _messageCreated = new AsyncEvent<KuracordClient, MessageCreateEventArgs>("MESSAGE_CREATED", EventExecutionLimit, EventErrorHandler);
+        _messageUpdated = new AsyncEvent<KuracordClient, MessageUpdateEventArgs>("MESSAGE_UPDATED", EventExecutionLimit, EventErrorHandler);
         _ready = new AsyncEvent<KuracordClient, ReadyEventArgs>("READY", EventExecutionLimit, EventErrorHandler);
         _heartbeated = new AsyncEvent<KuracordClient, HeartbeatEventArgs>("HEARTBEATED", EventExecutionLimit, EventErrorHandler);
         _resumed = new AsyncEvent<KuracordClient, ReadyEventArgs>("RESUMED", EventExecutionLimit, EventErrorHandler);
         _zombied = new AsyncEvent<KuracordClient, ZombiedEventArgs>("ZOMBIED", EventExecutionLimit, EventErrorHandler);
+        _unknownEvent = new AsyncEvent<KuracordClient, UnknownEventArgs>("UNKNOWN_EVENT", EventExecutionLimit, EventErrorHandler);
 
         _guilds.Clear();
     }
