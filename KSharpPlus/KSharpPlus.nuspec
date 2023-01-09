@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>An official .NET library for making applications using the Kuracord API.</title>
+    <authors>Kuracord</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <!-- <icon>icon.png</icon> -->
+    <description>An official .NET library for making applications using the Kuracord API.</description>
+    <repository type="git" url="https://github.com/Kuracord/KSharpPlus.git" branch="master"/>
+    <tags>Kuracord Kuracord-API Bots Apps Kuracord-Bots Kuracord-Apps Chat KSharp KSharpPlus CSharp VisualBasic FSharp</tags>
+  </metadata>
+</package>

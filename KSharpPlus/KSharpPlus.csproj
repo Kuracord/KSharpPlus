@@ -4,12 +4,24 @@
         <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <Company>Kuracord</Company>
+        <NeutralLanguage>en-US</NeutralLanguage>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <DebugType>None</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+
+        <NuspecFile>KSharpPlus.nuspec</NuspecFile>
+        <NuspecProperties>configuration=$(Configuration)</NuspecProperties>
+        <NuspecProperties>version=$(Version)</NuspecProperties>
+        <NuspecProperties>id=$(PackageId)</NuspecProperties>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Emzi0767.Common" Version="2.6.6" />
-      <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+        <PackageReference Include="Emzi0767.Common" Version="2.6.6" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     </ItemGroup>
 
 </Project>
