@@ -299,10 +299,10 @@ public sealed partial class KuracordClient {
 
         UpdateUserCache(memberAfter.User);
 
-        if (!guild.Members.TryGetValue(memberAfter.Id, out KuracordMember? memberBefore)) {
-            memberBefore = memberAfter;
-            guild._members!.Add(memberBefore);
-        }
+        if (!guild.Members.TryGetValue(memberAfter.Id, out KuracordMember? memberBefore)) memberBefore = memberAfter;
+
+        guild._members!.RemoveAll(m => m.Id == memberBefore.Id);
+        guild._members!.Add(memberAfter);
 
         MemberUpdatedEventArgs args = new(memberBefore, memberAfter, guild);
 
