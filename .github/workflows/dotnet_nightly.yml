@@ -24,7 +24,7 @@ jobs:
       run: dotnet test --verbosity normal KSharpPlus/KSharpPlus.csproj -p:VersionSuffix='nightly-${{ github.run_number }}.${{ github.run_attempt }}' -p:BuildNumber="${{ github.run_number }}/${{ github.run_attempt }}"
     - name: Create the package
       if: ${{ github.event_name == 'push' }}
-      run: nuget pack KSharpPlus/KSharpPlus.csproj -properties Configuration=Release -properties VersionSuffix="nightly-${{ github.run_number }}.${{ github.run_attempt }}" -properties BuildNumber="${{ github.run_number }}/${{ github.run_attempt }}" -OutputDirectory KSharpPlus/bin/Release/
+      run: nuget pack KSharpPlus/KSharpPlus.csproj -properties Configuration=Release -Suffix "nightly-${{ github.run_number }}.${{ github.run_attempt }}" -properties BuildNumber="${{ github.run_number }}/${{ github.run_attempt }}" -OutputDirectory KSharpPlus/bin/Release/
     - name: Publish the package to GPR
       if: ${{ github.event_name == 'push' }}
       run: dotnet nuget push KSharpPlus/bin/Release/*.nupkg -k ${{ secrets.NUGET_ORG_API_KEY }} -s https://api.nuget.org/v3/index.json

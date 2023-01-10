@@ -50,7 +50,7 @@ public class KuracordMember : SnowflakeObject, IEquatable<KuracordMember> {
     /// </summary>
     [JsonIgnore] public KuracordGuild Guild {
         get {
-            if (_guild == null) _guild = Kuracord.Guilds[_guildId];
+            if (_guild == null) _guild = Kuracord!.Guilds[_guildId];
             return _guild;
         }
         set => _guild = value;
@@ -72,7 +72,7 @@ public class KuracordMember : SnowflakeObject, IEquatable<KuracordMember> {
 
     #region Methods
 
-    public Task<KuracordMember> ModifyAsync(string? nickname) => Kuracord.ApiClient.ModifyMemberAsync(_guildId, Id, nickname);
+    public Task<KuracordMember> ModifyAsync(string? nickname) => Kuracord!.ApiClient.ModifyMemberAsync(_guildId, Id, nickname);
 
     #endregion
     

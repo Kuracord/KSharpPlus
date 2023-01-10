@@ -9,7 +9,6 @@ using KSharpPlus.EventArgs.Guild.Member;
 using KSharpPlus.EventArgs.Message;
 using KSharpPlus.Logging;
 using KSharpPlus.Net.Abstractions.Gateway;
-using KSharpPlus.Net.Abstractions.Transport;
 using KSharpPlus.Net.Serialization;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -76,12 +75,10 @@ public sealed partial class KuracordClient {
                 await OnMessageUpdateEventAsync(data.ToKuracordObject<KuracordMessage>(), data["author"]!.ToKuracordObject<KuracordUser>(), member).ConfigureAwait(false);
                 break;
             
-            /*
             // delete event does *not* include message object
             case "message_delete":
-                //todo    
+                await OnMessageDeleteEventAsync((ulong)data["messageId"]!, (ulong)data["channelId"]!, (ulong?)data["guildId"]).ConfigureAwait(false);
                 break;
-            */
 
             #endregion
 
@@ -239,8 +236,12 @@ public sealed partial class KuracordClient {
         author.Kuracord = this;
         member.Kuracord = this;
         member.User = author;
+        
+        CacheMessage(message, author, member);
+        
+        if (message.Channel == null!) Logger.LogWarning(LoggerEvents.WebSocketReceive, "Channel which the last message belongs to is not in cache - cache state might be invalid!");
 
-        MessageCreateEventArgs args = new(message, message.Guild, message.Channel, author, member);
+        MessageCreateEventArgs args = new(message, message.Guild, message.Channel!, author, member);
         
         await _messageCreated.InvokeAsync(this, args).ConfigureAwait(false);
     }
@@ -272,6 +273,26 @@ public sealed partial class KuracordClient {
         MessageUpdateEventArgs args = new(oldMessage, message, message.Guild, message.Channel, author, member);
         
         await _messageUpdated.InvokeAsync(this, args).ConfigureAwait(false);
+    }
+
+    internal async Task OnMessageDeleteEventAsync(ulong messageId, ulong channelId, ulong? guildId) {
+        KuracordGuild? guild = guildId.HasValue ? InternalGetCachedGuild(guildId) ?? await GetGuildAsync(guildId.Value) : null;
+        KuracordChannel? channel = InternalGetCachedChannel(channelId) ?? (guildId.HasValue ? await GetChannelAsync(guildId.Value, channelId) : null);
+        
+        if (channel == null ||
+            Configuration.MessageCacheSize == 0 ||
+            MessageCache == null ||
+            !MessageCache.TryGet(m => m.Id == messageId && m.ChannelId == channelId, out KuracordMessage? message)) 
+            message = new KuracordMessage {
+                Kuracord = this,
+                Id = messageId
+            };
+        
+        if (Configuration.MessageCacheSize > 0) MessageCache?.Remove(m => m.Id == message.Id && m.ChannelId == channelId);
+
+        MessageDeleteEventArgs args = new(guild!, channel!, message);
+
+        await _messageDeleted.InvokeAsync(this, args).ConfigureAwait(false);
     }
 
     #endregion

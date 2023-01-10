@@ -6,6 +6,7 @@ using KSharpPlus.Entities.Channel.Message;
 using KSharpPlus.Entities.Guild;
 using KSharpPlus.Entities.Invite;
 using KSharpPlus.Entities.User;
+using KSharpPlus.Enums.Channel;
 using KSharpPlus.EventArgs;
 using KSharpPlus.EventArgs.Channel;
 using KSharpPlus.EventArgs.Guild;
@@ -77,6 +78,7 @@ public sealed partial class KuracordClient : BaseKuracordClient {
         _memberUpdated = new AsyncEvent<KuracordClient, MemberUpdatedEventArgs>("MEMBER_UPDATED", EventExecutionLimit, EventErrorHandler);
         _messageCreated = new AsyncEvent<KuracordClient, MessageCreateEventArgs>("MESSAGE_CREATED", EventExecutionLimit, EventErrorHandler);
         _messageUpdated = new AsyncEvent<KuracordClient, MessageUpdateEventArgs>("MESSAGE_UPDATED", EventExecutionLimit, EventErrorHandler);
+        _messageDeleted = new AsyncEvent<KuracordClient, MessageDeleteEventArgs>("MESSAGE_DELETED", EventExecutionLimit, EventErrorHandler);
         _ready = new AsyncEvent<KuracordClient, ReadyEventArgs>("READY", EventExecutionLimit, EventErrorHandler);
         _heartbeated = new AsyncEvent<KuracordClient, HeartbeatEventArgs>("HEARTBEATED", EventExecutionLimit, EventErrorHandler);
         _resumed = new AsyncEvent<KuracordClient, ReadyEventArgs>("RESUMED", EventExecutionLimit, EventErrorHandler);
@@ -425,6 +427,8 @@ public sealed partial class KuracordClient : BaseKuracordClient {
                 
         return null;
     }
+    
+    internal KuracordGuild? InternalGetCachedGuild(ulong? guildId) => _guilds != null && guildId.HasValue && _guilds.TryGetValue(guildId.Value, out KuracordGuild? guild) ? guild : null;
 
     void UpdateCachedGuild(KuracordGuild newGuild, JArray? rawMembers) {
         if (_disposed) return;
@@ -476,6 +480,56 @@ public sealed partial class KuracordClient : BaseKuracordClient {
         guild.Owner = newGuild.Owner;
         guild.IconHash = newGuild.IconHash;
         guild.VanityCode = newGuild.VanityCode;
+    }
+
+    void UpdateMessage(KuracordMessage message, KuracordUser author, KuracordGuild guild, KuracordMember member) {
+        author.Kuracord = this;
+        member.Kuracord = this;
+        member.User = author;
+        message.Author = UpdateUser(author, guild, member);
+
+        KuracordChannel? channel = InternalGetCachedChannel(message.ChannelId);
+        
+        if (channel != null) return;
+
+        channel = !message._guildId.HasValue 
+            ? new KuracordDmChannel {
+                Kuracord = this,
+                Id = message.ChannelId,
+                Type = ChannelType.Unknown,
+                Recipients = new[] { message.Author }
+            } : new KuracordChannel {
+                Kuracord = this,
+                Id = message.ChannelId,
+                Type = ChannelType.Text,
+                GuildId = guild.Id
+            };
+
+        message._channel = channel;
+    }
+
+    KuracordUser UpdateUser(KuracordUser user, KuracordGuild guild, KuracordMember member) {
+        if (member != null!) {
+            member.Kuracord = this;
+            member._guildId = guild.Id;
+
+            if (member.User == null!) return user;
+
+            user = member.User;
+            user.Kuracord = this;
+
+            member.User = UpdateUserCache(user);
+        } else if (!string.IsNullOrWhiteSpace(user.Username)) UpdateUserCache(user);
+
+        return user;
+    }
+
+    void CacheMessage(KuracordMessage message, KuracordUser author, KuracordMember member) {
+        KuracordGuild guild = message.Channel.Guild ?? message.Guild;
+        
+        UpdateMessage(message, author, guild, member);
+
+        if (Configuration.MessageCacheSize > 0 && message.Channel != null!) MessageCache?.Add(message);
     }
 
     #endregion

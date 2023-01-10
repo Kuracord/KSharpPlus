@@ -118,30 +118,45 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     /// <returns>The URL of the guild's icon.</returns>
     public string GetIconUrl() => string.IsNullOrWhiteSpace(IconHash) ? null! : $"https://cdn.kuracord.tk/icons/{Id}/{IconHash}";
 
-    public Task<KuracordGuild> ModifyAsync(string name) => Kuracord.ApiClient.ModifyGuildAsync(Id, name);
+    public Task<KuracordGuild> ModifyAsync(string name) => Kuracord!.ApiClient.ModifyGuildAsync(Id, name);
 
     public Task<KuracordChannel> CreateTextChannelAsync(string name) => CreateChannelAsync(name, ChannelType.Text);
 
-    public Task<KuracordChannel> CreateChannelAsync(string name, ChannelType type) => Kuracord.ApiClient.CreateChannelAsync(Id, name);
+    public Task<KuracordChannel> CreateChannelAsync(string name, ChannelType type) => Kuracord!.ApiClient.CreateChannelAsync(Id, name);
 
-    public Task<IReadOnlyList<KuracordChannel>> GetChannelsAsync() => Kuracord.ApiClient.GetChannelsAsync(Id);
+    public Task<IReadOnlyList<KuracordChannel>> GetChannelsAsync() => Kuracord!.ApiClient.GetChannelsAsync(Id);
 
     public async Task<KuracordChannel> GetChannelAsync(ulong channelId) => 
         Channels.TryGetValue(channelId, out KuracordChannel? channel) && channel != null
             ? channel
-            : await Kuracord.ApiClient.GetChannelAsync(Id, channelId).ConfigureAwait(false);
+            : await Kuracord!.ApiClient.GetChannelAsync(Id, channelId).ConfigureAwait(false);
 
-    public Task<IReadOnlyList<KuracordMember>> GetMembersAsync() => Kuracord.ApiClient.GetMembersAsync(Id);
+    // ReSharper disable once InvertIf
+    public async Task<KuracordMember> GetMemberAsync(ulong memberId) {
+        if (!Members.TryGetValue(memberId, out KuracordMember? member)) {
+            member = await Kuracord!.ApiClient.GetMemberAsync(Id, memberId);
+            _members!.Add(member);
+        }
+
+        member.Kuracord ??= Kuracord;
+        return member;
+    }
+
+    public async Task<IReadOnlyList<KuracordMember>> GetMembersAsync() {
+        IReadOnlyList<KuracordMember> members = await Kuracord!.ApiClient.GetMembersAsync(Id);
+        _members = members.ToList();
+        return members;
+    }
 
     public Task<KuracordMember> ModifyMemberAsync(KuracordMember member, string? nickname) => ModifyMemberAsync(member.Id, nickname);
 
-    public Task<KuracordMember> ModifyMemberAsync(ulong memberId, string? nickname) => Kuracord.ApiClient.ModifyMemberAsync(Id, memberId, nickname);
+    public Task<KuracordMember> ModifyMemberAsync(ulong memberId, string? nickname) => Kuracord!.ApiClient.ModifyMemberAsync(Id, memberId, nickname);
 
     public KuracordRole GetRole(ulong roleId) => Roles.TryGetValue(roleId, out KuracordRole? role) ? role : null!;
 
     public Task<KuracordMessage> SendMessageAsync(KuracordChannel channel, string content) => SendMessageAsync(channel.Id, content);
 
-    public Task<KuracordMessage> SendMessageAsync(ulong channelId, string content) => Kuracord.ApiClient.CreateMessageAsync(channelId, content);
+    public Task<KuracordMessage> SendMessageAsync(ulong channelId, string content) => Kuracord!.ApiClient.CreateMessageAsync(channelId, content);
 
     #endregion
     

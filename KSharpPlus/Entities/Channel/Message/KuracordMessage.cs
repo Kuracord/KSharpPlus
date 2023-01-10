@@ -114,9 +114,9 @@ public class KuracordMessage : SnowflakeObject, IEquatable<KuracordMessage> {
 
     #region Methods
 
-    public Task<KuracordMessage> ModifyAsync(string content) => Kuracord.ApiClient.EditMessageAsync(ChannelId, Id, content);
+    public Task<KuracordMessage> ModifyAsync(string content) => Kuracord!.ApiClient.EditMessageAsync(ChannelId, Id, content);
 
-    public Task DeleteAsync() => Kuracord.ApiClient.DeleteMessageAsync(ChannelId, Id);
+    public Task DeleteAsync() => Kuracord!.ApiClient.DeleteMessageAsync(ChannelId, Id);
 
     #endregion
     

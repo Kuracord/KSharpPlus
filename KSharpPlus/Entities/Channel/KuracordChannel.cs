@@ -63,29 +63,29 @@ public class KuracordChannel : SnowflakeObject, IEquatable<KuracordChannel> {
 
     #region Methods
 
-    public Task<KuracordMessage> SendMessageAsync(string content) => Kuracord.ApiClient.CreateMessageAsync(Id, content);
+    public Task<KuracordMessage> SendMessageAsync(string content) => Kuracord!.ApiClient.CreateMessageAsync(Id, content);
 
     public async Task<KuracordMessage> GetMessageAsync(ulong messageId, bool skipCache = false) =>
         !skipCache &&
-        Kuracord.Configuration.MessageCacheSize > 0 &&
+        Kuracord!.Configuration.MessageCacheSize > 0 &&
         Kuracord is KuracordClient { MessageCache: { } } client &&
         client.MessageCache.TryGet(m => m.Id == messageId && m.ChannelId == Id, out KuracordMessage message) ? message 
-            : await Kuracord.ApiClient.GetMessageAsync(Id, messageId).ConfigureAwait(false);
+            : await Kuracord!.ApiClient.GetMessageAsync(Id, messageId).ConfigureAwait(false);
 
     public Task<IReadOnlyList<KuracordMessage>> GetMessagesAsync() => GetMessagesInternalAsync();
 
     public Task<KuracordMessage> EditMessageAsync(KuracordMessage message, string content) => EditMessageAsync(message.Id, content);
 
-    public Task<KuracordMessage> EditMessageAsync(ulong messageId, string content) => Kuracord.ApiClient.EditMessageAsync(Id, messageId, content);
+    public Task<KuracordMessage> EditMessageAsync(ulong messageId, string content) => Kuracord!.ApiClient.EditMessageAsync(Id, messageId, content);
 
     public Task DeleteMessageAsync(KuracordMessage message) => DeleteMessageAsync(message.Id);
 
-    public Task DeleteMessageAsync(ulong messageId) => Kuracord.ApiClient.DeleteMessageAsync(Id, messageId);
+    public Task DeleteMessageAsync(ulong messageId) => Kuracord!.ApiClient.DeleteMessageAsync(Id, messageId);
     
     Task<IReadOnlyList<KuracordMessage>> GetMessagesInternalAsync() {
         if (Type != ChannelType.Text) throw new ArgumentException($"Cannot get the messages of a {Type} channel.");
 
-        return Kuracord.ApiClient.GetMessagesAsync(Id);
+        return Kuracord!.ApiClient.GetMessagesAsync(Id);
     }
 
     #endregion

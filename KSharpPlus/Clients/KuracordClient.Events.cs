@@ -171,6 +171,16 @@ public sealed partial class KuracordClient {
     }
 
     AsyncEvent<KuracordClient, MessageUpdateEventArgs> _messageUpdated;
+    
+    /// <summary>
+    /// Fired when a message is deleted.
+    /// </summary>
+    public event AsyncEventHandler<KuracordClient, MessageDeleteEventArgs> MessageDeleted {
+        add => _messageDeleted.Register(value);
+        remove => _messageDeleted.Unregister(value);
+    }
+
+    AsyncEvent<KuracordClient, MessageDeleteEventArgs> _messageDeleted;
 
     #endregion
 
