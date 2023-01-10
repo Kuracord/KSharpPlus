@@ -46,7 +46,6 @@ public abstract class BaseKuracordClient : IDisposable {
     /// <summary>
     /// Initializes this client. This method fetches information about current user, application, and voice regions.
     /// </summary>
-    /// <returns></returns>
     public virtual async Task InitializeAsync() {
         if (CurrentUser == null) {
             CurrentUser = await ApiClient.GetCurrentUserAsync().ConfigureAwait(false);

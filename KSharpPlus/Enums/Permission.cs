@@ -8,7 +8,7 @@ public static class PermissionMethods {
     /// </summary>
     /// <param name="p">The permissions to calculate from</param>
     /// <param name="permission">permission you want to check</param>
-    /// <returns></returns>
+    /// <returns>True if the permission contains the given permission, otherwise false.</returns>
     public static bool HasPermission(this Permissions p, Permissions permission) => 
         p.HasFlag(Permissions.Administrator) || (p & permission) == permission;
 
@@ -17,7 +17,7 @@ public static class PermissionMethods {
     /// </summary>
     /// <param name="p">The permissions to add to.</param>
     /// <param name="grant">Permission to add.</param>
-    /// <returns></returns>
+    /// <returns>Permissions with the granted permissions.</returns>
     public static Permissions Grant(this Permissions p, Permissions grant) => p | grant;
 
     /// <summary>
@@ -25,7 +25,7 @@ public static class PermissionMethods {
     /// </summary>
     /// <param name="p">The permissions to take from.</param>
     /// <param name="revoke">Permission to take.</param>
-    /// <returns></returns>
+    /// <returns>Permissions without the revoked permissions.</returns>
     public static Permissions Revoke(this Permissions p, Permissions revoke) => p & ~revoke;
 }
 
@@ -84,7 +84,7 @@ public enum Permissions : long {
     ViewChannels = 1 << 0,
     
     /// <summary>
-    /// Allows sending messages (does not allow sending messages in threads).
+    /// Allows sending messages.
     /// </summary>
     [PermissionString("Send messages")]
     SendMessages = 1 << 1,

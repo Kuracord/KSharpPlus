@@ -26,13 +26,11 @@ public interface IWebSocketClient : IDisposable {
     /// Connects to a specified remote WebSocket endpoint.
     /// </summary>
     /// <param name="uri">The URI of the WebSocket endpoint.</param>
-    /// <returns></returns>
     Task ConnectAsync(Uri uri);
 
     /// <summary>
     /// Disconnects the WebSocket connection.
     /// </summary>
-    /// <returns></returns>
     Task DisconnectAsync(int code = 1000, string message = "");
 
     /// <summary>

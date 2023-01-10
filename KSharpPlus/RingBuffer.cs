@@ -55,7 +55,7 @@ public class RingBuffer<T> : ICollection<T> {
     /// <exception cref="ArgumentOutOfRangeException" />
     public RingBuffer(IEnumerable<T> elements, int index = 0) {
         if (elements == null || !elements.Any())
-            throw new ArgumentException(nameof(elements), "The collection cannot be null or empty.");
+            throw new ArgumentException("The collection cannot be null or empty.", nameof(elements));
 
         CurrentIndex = index;
         InternalBuffer = elements.ToArray();

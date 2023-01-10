@@ -1,6 +1,8 @@
 ﻿using KSharpPlus.Clients;
 using KSharpPlus.Entities.Guild;
 using KSharpPlus.Entities.User;
+using KSharpPlus.Enums;
+using KSharpPlus.Exceptions;
 using Newtonsoft.Json;
 
 namespace KSharpPlus.Entities.Channel.Message;
@@ -114,8 +116,24 @@ public class KuracordMessage : SnowflakeObject, IEquatable<KuracordMessage> {
 
     #region Methods
 
+    /// <summary>
+    /// Edits the message.
+    /// </summary>
+    /// <param name="content">New content.</param>
+    /// <returns>Modified message.</returns>
+    /// <exception cref="Exceptions.UnauthorizedException">Thrown when the client tried to modify a message not sent by them.</exception>
+    /// <exception cref="Exceptions.NotFoundException">Thrown when the member does not exist.</exception>
+    /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
+    /// <exception cref="Exceptions.ServerErrorException">Thrown when Discord is unable to process the request.</exception>
     public Task<KuracordMessage> ModifyAsync(string content) => Kuracord!.ApiClient.EditMessageAsync(ChannelId, Id, content);
 
+    /// <summary>
+    /// Deletes a message.
+    /// </summary>
+    /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.Administrator"/> permission.</exception>
+    /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
+    /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
+    /// <exception cref="ServerErrorException">Thrown when Discord is unable to process the request.</exception>
     public Task DeleteAsync() => Kuracord!.ApiClient.DeleteMessageAsync(ChannelId, Id);
 
     #endregion

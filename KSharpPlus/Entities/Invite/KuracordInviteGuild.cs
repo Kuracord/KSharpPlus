@@ -53,6 +53,13 @@ public class KuracordInviteGuild : SnowflakeObject {
     /// <returns>The URL of the guild's icon.</returns>
     public string GetIconUrl() => string.IsNullOrWhiteSpace(IconHash) ? null! : $"https://cdn.kuracord.tk/icons/{Id}/{IconHash}";
 
+    /// <summary>
+    /// Joins a guild.
+    /// </summary>
+    /// <returns>The requested guild.</returns>
+    /// <exception cref="Exceptions.NotFoundException">Thrown when the guild does not exist.</exception>
+    /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
+    /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
     public Task<KuracordGuild> AcceptAsync() => Kuracord!.ApiClient.AcceptInviteAsync(VanityCode);
 
     #endregion

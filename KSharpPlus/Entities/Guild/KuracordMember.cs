@@ -1,4 +1,5 @@
 ﻿using KSharpPlus.Entities.User;
+using KSharpPlus.Enums;
 using KSharpPlus.Net.Abstractions.Transport;
 using Newtonsoft.Json;
 
@@ -72,6 +73,15 @@ public class KuracordMember : SnowflakeObject, IEquatable<KuracordMember> {
 
     #region Methods
 
+    /// <summary>
+    /// Modifies the member.
+    /// </summary>
+    /// <param name="nickname">New member nickname.</param>
+    /// <returns>Modified member.</returns>
+    /// <exception cref="Exceptions.UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.Administrator"/> permission.</exception>
+    /// <exception cref="Exceptions.NotFoundException">Thrown when the member does not exist.</exception>
+    /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
+    /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
     public Task<KuracordMember> ModifyAsync(string? nickname) => Kuracord!.ApiClient.ModifyMemberAsync(_guildId, Id, nickname);
 
     #endregion
