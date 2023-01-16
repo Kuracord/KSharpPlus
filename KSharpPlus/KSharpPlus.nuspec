@@ -10,6 +10,7 @@
     <!-- <icon>icon.png</icon> -->
     <description>An official .NET library for making applications using the Kuracord API.</description>
     <repository type="git" url="https://github.com/Kuracord/KSharpPlus.git" branch="master"/>
+    <projectUrl>https://ksharpplus.github.io/</projectUrl>
     <tags>Kuracord Kuracord-API Bots Apps Kuracord-Bots Kuracord-Apps Chat KSharp KSharpPlus CSharp VisualBasic FSharp</tags>
     <dependencies>
       <dependency id="Emzi0767.Common" version="2.6.6"/>
