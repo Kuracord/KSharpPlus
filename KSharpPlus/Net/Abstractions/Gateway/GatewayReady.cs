@@ -1,4 +1,4 @@
-﻿using KSharpPlus.Net.Abstractions.Transport;
+﻿using KSharpPlus.Entities.User;
 using Newtonsoft.Json;
 
 namespace KSharpPlus.Net.Abstractions.Gateway; 
@@ -10,12 +10,10 @@ internal sealed class GatewayReady {
     /// <summary>
     /// Gets the current session's ID.
     /// </summary>
-    [JsonProperty("sessionId")]
-    public string SessionId { get; private set; }
+    [JsonProperty("sessionId")] public string SessionId { get; private set; } = null!;
     
     /// <summary>
     /// Gets the current user.
     /// </summary>
-    [JsonProperty("user")]
-    public TransportUser CurrentUser { get; private set; }
+    [JsonProperty("user")] public KuracordUser CurrentUser { get; private set; } = null!;
 }

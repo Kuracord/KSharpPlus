@@ -20,7 +20,7 @@ public class RingBuffer<T> : ICollection<T> {
     /// <summary>
     /// Gets the number of items in this ring buffer.
     /// </summary>
-    public int Count => _reached_end ? Capacity : CurrentIndex;
+    public int Count => _reachedEnd ? Capacity : CurrentIndex;
 
     /// <summary>
     /// Gets whether this ring buffer is read-only.
@@ -30,8 +30,8 @@ public class RingBuffer<T> : ICollection<T> {
     /// <summary>
     /// Gets or sets the internal collection of items.
     /// </summary>
-    protected T[] InternalBuffer { get; set; }
-    bool _reached_end;
+    T[] InternalBuffer { get; }
+    bool _reachedEnd;
 
     /// <summary>
     /// Creates a new ring buffer with specified size.
@@ -47,25 +47,6 @@ public class RingBuffer<T> : ICollection<T> {
     }
 
     /// <summary>
-    /// Creates a new ring buffer, filled with specified elements, and starting at specified index.
-    /// </summary>
-    /// <param name="elements">Elements to fill the buffer with.</param>
-    /// <param name="index">Starting element index.</param>
-    /// <exception cref="ArgumentException" />
-    /// <exception cref="ArgumentOutOfRangeException" />
-    public RingBuffer(IEnumerable<T> elements, int index = 0) {
-        if (elements == null || !elements.Any())
-            throw new ArgumentException("The collection cannot be null or empty.", nameof(elements));
-
-        CurrentIndex = index;
-        InternalBuffer = elements.ToArray();
-        Capacity = InternalBuffer.Length;
-
-        if (CurrentIndex >= InternalBuffer.Length || CurrentIndex < 0)
-            throw new ArgumentOutOfRangeException(nameof(index), "Index must be less than buffer capacity, and greater than zero.");
-    }
-
-    /// <summary>
     /// Inserts an item into this ring buffer.
     /// </summary>
     /// <param name="item">Item to insert.</param>
@@ -75,7 +56,7 @@ public class RingBuffer<T> : ICollection<T> {
         if (CurrentIndex != Capacity) return;
 
         CurrentIndex = 0;
-        _reached_end = true;
+        _reachedEnd = true;
     }
 
     /// <summary>
@@ -102,7 +83,7 @@ public class RingBuffer<T> : ICollection<T> {
             return true;
         }
 
-        item = default;
+        item = default!;
         return false;
     }
 
@@ -110,7 +91,7 @@ public class RingBuffer<T> : ICollection<T> {
     /// Clears this ring buffer and resets the current item index.
     /// </summary>
     public void Clear() {
-        for (int i = 0; i < InternalBuffer.Length; i++) InternalBuffer[i] = default;
+        for (int i = 0; i < InternalBuffer.Length; i++) InternalBuffer[i] = default!;
 
         CurrentIndex = 0;
     }
@@ -162,7 +143,7 @@ public class RingBuffer<T> : ICollection<T> {
         for (int i = 0; i < InternalBuffer.Length; i++) {
             if (InternalBuffer[i] == null || !predicate(InternalBuffer[i])) continue;
 
-            InternalBuffer[i] = default;
+            InternalBuffer[i] = default!;
             return true;
         }
 
@@ -173,7 +154,7 @@ public class RingBuffer<T> : ICollection<T> {
     /// Returns an enumerator for this ring buffer.
     /// </summary>
     /// <returns>Enumerator for this ring buffer.</returns>
-    public IEnumerator<T> GetEnumerator() => !_reached_end
+    public IEnumerator<T> GetEnumerator() => !_reachedEnd
         ? InternalBuffer.AsEnumerable().GetEnumerator() 
         : InternalBuffer.Skip(CurrentIndex).Concat(InternalBuffer.Take(CurrentIndex)).GetEnumerator();
 

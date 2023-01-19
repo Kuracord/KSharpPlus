@@ -22,12 +22,12 @@ public abstract class BaseKuracordClient : IDisposable {
     /// <summary>
     /// Gets the string representing the version of K#+.
     /// </summary>
-    public string VersionString { get; }
+    public string VersionString { get; } = null!;
     
     /// <summary>
     /// Gets the current user.
     /// </summary>
-    public KuracordUser CurrentUser { get; internal set; }
+    public KuracordUser CurrentUser { get; internal set; } = null!;
     
     /// <summary>
     /// Gets the cached guilds for this client.
@@ -47,7 +47,7 @@ public abstract class BaseKuracordClient : IDisposable {
     /// Initializes this client. This method fetches information about current user, application, and voice regions.
     /// </summary>
     public virtual async Task InitializeAsync() {
-        if (CurrentUser == null) {
+        if (CurrentUser == null!) {
             CurrentUser = await ApiClient.GetCurrentUserAsync().ConfigureAwait(false);
             UpdateUserCache(CurrentUser);
         }
@@ -62,7 +62,7 @@ public abstract class BaseKuracordClient : IDisposable {
     protected BaseKuracordClient(KuracordConfiguration config) {
         Configuration = new KuracordConfiguration(config);
 
-        if (Configuration.LoggerFactory == null) {
+        if (Configuration.LoggerFactory == null!) {
             Configuration.LoggerFactory = new DefaultLoggerFactory();
             Configuration.LoggerFactory.AddProvider(new DefaultLoggerProvider(this));
         }

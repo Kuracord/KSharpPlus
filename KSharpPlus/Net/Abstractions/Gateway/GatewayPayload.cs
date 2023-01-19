@@ -16,7 +16,7 @@ internal sealed class GatewayPayload {
     /// Gets or sets the data of the payload.
     /// </summary>
     [JsonProperty("d")]
-    public object Data { get; set; }
+    public object Data { get; set; } = null!;
 
     /// <summary>
     /// Gets or sets the sequence number of the payload. Only present for OP 1.
@@ -28,5 +28,5 @@ internal sealed class GatewayPayload {
     /// Gets or sets the event name of the payload. Only present for OP 1.
     /// </summary>
     [JsonProperty("t", NullValueHandling = NullValueHandling.Ignore)]
-    public string EventName { get; set; }
+    public string EventName { get; set; } = null!;
 }

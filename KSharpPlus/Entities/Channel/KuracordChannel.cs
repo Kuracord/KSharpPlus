@@ -17,7 +17,7 @@ public class KuracordChannel : SnowflakeObject, IEquatable<KuracordChannel> {
     /// Gets the name of this channel.
     /// </summary>
     [JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
-    public string Name { get; internal set; }
+    public string Name { get; internal set; } = null!;
     
     /// <summary>
     /// Gets the type of this channel.
@@ -73,7 +73,7 @@ public class KuracordChannel : SnowflakeObject, IEquatable<KuracordChannel> {
     /// <exception cref="Exceptions.NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
     /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
-    public Task<KuracordMessage> SendMessageAsync(string content) => Kuracord!.ApiClient.CreateMessageAsync(Id, content);
+    public Task<KuracordMessage> SendMessageAsync(string content) => Kuracord!.ApiClient.CreateMessageAsync(Guild!.Id, Id, content);
 
     /// <summary>
     /// Returns a specific message.
@@ -84,13 +84,13 @@ public class KuracordChannel : SnowflakeObject, IEquatable<KuracordChannel> {
     /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.ViewChannels"/> permission.</exception>
     /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="ServerErrorException">Thrown when Discord is unable to process the request.</exception>
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
     public async Task<KuracordMessage> GetMessageAsync(ulong messageId, bool skipCache = false) =>
         !skipCache &&
         Kuracord!.Configuration.MessageCacheSize > 0 &&
         Kuracord is KuracordClient { MessageCache: { } } client &&
         client.MessageCache.TryGet(m => m.Id == messageId && m.ChannelId == Id, out KuracordMessage message) ? message 
-            : await Kuracord!.ApiClient.GetMessageAsync(Id, messageId).ConfigureAwait(false);
+            : await Kuracord!.ApiClient.GetMessageAsync(Guild!.Id, Id, messageId).ConfigureAwait(false);
 
     /// <summary>
     /// Returns a list of messages from the last message in the channel.
@@ -99,7 +99,7 @@ public class KuracordChannel : SnowflakeObject, IEquatable<KuracordChannel> {
     /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.ViewChannels"/> permission.</exception>
     /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="ServerErrorException">Thrown when Discord is unable to process the request.</exception>
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
     public Task<IReadOnlyList<KuracordMessage>> GetMessagesAsync() => GetMessagesInternalAsync();
 
     /// <summary>
@@ -111,7 +111,7 @@ public class KuracordChannel : SnowflakeObject, IEquatable<KuracordChannel> {
     /// <exception cref="Exceptions.UnauthorizedException">Thrown when the client tried to modify a message not sent by them.</exception>
     /// <exception cref="Exceptions.NotFoundException">Thrown when the member does not exist.</exception>
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="Exceptions.ServerErrorException">Thrown when Discord is unable to process the request.</exception>
+    /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
     public Task<KuracordMessage> EditMessageAsync(KuracordMessage message, string content) => EditMessageAsync(message.Id, content);
 
     /// <summary>
@@ -123,8 +123,8 @@ public class KuracordChannel : SnowflakeObject, IEquatable<KuracordChannel> {
     /// <exception cref="Exceptions.UnauthorizedException">Thrown when the client tried to modify a message not sent by them.</exception>
     /// <exception cref="Exceptions.NotFoundException">Thrown when the member does not exist.</exception>
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="Exceptions.ServerErrorException">Thrown when Discord is unable to process the request.</exception>
-    public Task<KuracordMessage> EditMessageAsync(ulong messageId, string content) => Kuracord!.ApiClient.EditMessageAsync(Id, messageId, content);
+    /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task<KuracordMessage> EditMessageAsync(ulong messageId, string content) => Kuracord!.ApiClient.EditMessageAsync(Guild!.Id, Id, messageId, content);
 
     /// <summary>
     /// Deletes a message.
@@ -133,7 +133,7 @@ public class KuracordChannel : SnowflakeObject, IEquatable<KuracordChannel> {
     /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.Administrator"/> permission.</exception>
     /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="ServerErrorException">Thrown when Discord is unable to process the request.</exception>
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
     public Task DeleteMessageAsync(KuracordMessage message) => DeleteMessageAsync(message.Id);
 
     /// <summary>
@@ -143,14 +143,34 @@ public class KuracordChannel : SnowflakeObject, IEquatable<KuracordChannel> {
     /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.Administrator"/> permission.</exception>
     /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="ServerErrorException">Thrown when Discord is unable to process the request.</exception>
-    public Task DeleteMessageAsync(ulong messageId) => Kuracord!.ApiClient.DeleteMessageAsync(Id, messageId);
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task DeleteMessageAsync(ulong messageId) => Kuracord!.ApiClient.DeleteMessageAsync(Guild!.Id, Id, messageId);
     
     Task<IReadOnlyList<KuracordMessage>> GetMessagesInternalAsync() {
         if (Type != ChannelType.Text) throw new ArgumentException($"Cannot get the messages of a {Type} channel.");
 
-        return Kuracord!.ApiClient.GetMessagesAsync(Id);
+        return Kuracord!.ApiClient.GetMessagesAsync(Guild!.Id, Id);
     }
+    
+    /// <summary>
+    /// Modifies a channel.
+    /// </summary>
+    /// <param name="name">New channel name.</param>
+    /// <returns>Modified channel.</returns>
+    /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.Administrator"/> permission.</exception>
+    /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
+    /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task<KuracordChannel> ModifyAsync(string name) => Kuracord!.ApiClient.ModifyChannelAsync(Guild!.Id, Id, name);
+    
+    /// <summary>
+    /// Deletes a channel.
+    /// </summary>
+    /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.Administrator"/> permission.</exception>
+    /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
+    /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task DeleteAsync() => Kuracord!.ApiClient.DeleteChannelAsync(Guild!.Id, Id);
 
     #endregion
     

@@ -55,13 +55,6 @@ public sealed class KuracordConfiguration {
     /// <para>Defaults to true.</para>
     /// </summary>
     public bool AutoReconnect { internal get; set; } = true;
-    
-    /// <summary>
-    /// <para>Sets the level of compression for WebSocket traffic.</para>
-    /// <para>Disabling this option will increase the amount of traffic sent via WebSocket. Setting <see cref="GatewayCompressionLevel.Payload"/> will enable compression for READY and GUILD_CREATE payloads. Setting <see cref="Stream"/> will enable compression for the entire WebSocket stream, drastically reducing amount of traffic.</para>
-    /// <para>Defaults to <see cref="GatewayCompressionLevel.Stream"/>.</para>
-    /// </summary>
-    public GatewayCompressionLevel GatewayCompressionLevel { internal get; set; } = GatewayCompressionLevel.Stream;
 
     /// <summary>
     /// <para>Sets the size of the global message cache.</para>
@@ -73,7 +66,7 @@ public sealed class KuracordConfiguration {
     /// <para>Sets the proxy to use for HTTP and WebSocket connections to Kuracord.</para>
     /// <para>Defaults to null.</para>
     /// </summary>
-    public IWebProxy Proxy { internal get; set; }
+    public IWebProxy Proxy { internal get; set; } = null!;
 
     /// <summary>
     /// <para>Sets the timeout for HTTP requests.</para>
@@ -106,7 +99,7 @@ public sealed class KuracordConfiguration {
     /// <para>To create your own logger, implement the <see cref="ILoggerFactory"/> instance.</para>
     /// <para>Defaults to built-in implementation.</para>
     /// </summary>
-    public ILoggerFactory LoggerFactory { internal get; set; }
+    public ILoggerFactory LoggerFactory { internal get; set; } = null!;
 
     /// <summary>
     /// Whether to log unknown events or not. Defaults to true.

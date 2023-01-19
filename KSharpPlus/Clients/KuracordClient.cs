@@ -73,9 +73,13 @@ public sealed partial class KuracordClient : BaseKuracordClient {
         _guildCreated = new AsyncEvent<KuracordClient, GuildCreateEventArgs>("GUILD_CREATED", EventExecutionLimit, EventErrorHandler);
         _guildAvailable = new AsyncEvent<KuracordClient, GuildCreateEventArgs>("GUILD_AVAILABLE", EventExecutionLimit, EventErrorHandler);
         _guildUpdated = new AsyncEvent<KuracordClient, GuildUpdateEventArgs>("GUILD_UPDATED", EventExecutionLimit, EventErrorHandler);
+        _guildDeleted = new AsyncEvent<KuracordClient, GuildDeleteEventArgs>("GUILD_DELETED", EventExecutionLimit, EventErrorHandler);
         _guildDownloadCompletedEvent = new AsyncEvent<KuracordClient, GuildDownloadCompletedEventArgs>("GUILD_DOWNLOAD_COMPLETED", EventExecutionLimit, EventErrorHandler);
         _channelCreated = new AsyncEvent<KuracordClient, ChannelCreateEventArgs>("CHANNEL_CREATED", EventExecutionLimit, EventErrorHandler);
+        _channelUpdated = new AsyncEvent<KuracordClient, ChannelUpdateEventArgs>("CHANNEL_UPDATED", EventExecutionLimit, EventErrorHandler);
+        _channelDeleted = new AsyncEvent<KuracordClient, ChannelDeleteEventArgs>("CHANNEL_DELETED", EventExecutionLimit, EventErrorHandler);
         _memberJoined = new AsyncEvent<KuracordClient, MemberJoinedEventArgs>("MEMBER_JOINED", EventExecutionLimit, EventErrorHandler);
+        _memberLeave = new AsyncEvent<KuracordClient, MemberLeaveEventArgs>("MEMBER_LEAVE", EventExecutionLimit, EventErrorHandler);
         _memberUpdated = new AsyncEvent<KuracordClient, MemberUpdatedEventArgs>("MEMBER_UPDATED", EventExecutionLimit, EventErrorHandler);
         _messageCreated = new AsyncEvent<KuracordClient, MessageCreateEventArgs>("MESSAGE_CREATED", EventExecutionLimit, EventErrorHandler);
         _messageUpdated = new AsyncEvent<KuracordClient, MessageUpdateEventArgs>("MESSAGE_UPDATED", EventExecutionLimit, EventErrorHandler);
@@ -152,7 +156,7 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     /// </summary>
     public async Task DisconnectAsync() {
         Configuration.AutoReconnect = false;
-        if (_webSocketClient != null) await _webSocketClient.DisconnectAsync().ConfigureAwait(false);
+        if (_webSocketClient != null!) await _webSocketClient.DisconnectAsync().ConfigureAwait(false);
     }
 
     #endregion
@@ -217,7 +221,7 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     /// Modifies a guild.
     /// </summary>
     /// <param name="guild">The guild to modify.</param>
-    /// <param name="name">New name.</param>
+    /// <param name="name">New guild name.</param>
     /// <returns>Modified guild.</returns>
     /// <exception cref="Exceptions.NotFoundException">Thrown when the guild does not exist.</exception>
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
@@ -228,12 +232,46 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     /// Modifies a guild.
     /// </summary>
     /// <param name="guildId">ID of the guild to modify.</param>
-    /// <param name="name">New name.</param>
+    /// <param name="name">New guild name.</param>
     /// <returns>Modified guild.</returns>
     /// <exception cref="Exceptions.NotFoundException">Thrown when the guild does not exist.</exception>
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
     /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
     public Task<KuracordGuild> ModifyGuildAsync(ulong guildId, string name) => ApiClient.ModifyGuildAsync(guildId, name);
+    
+    /// <summary>
+    /// Deletes the guild. Requires the caller to be the owner of the guild.
+    /// </summary>
+    /// <param name="guild">The guild to delete.</param>
+    /// <param name="password">Your account password.</param>
+    /// <exception cref="UnauthorizedException">Thrown when the client is not the owner of the guild.</exception>
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task DeleteGuildAsync(KuracordGuild guild, string password) => DeleteGuildAsync(guild.Id, password);
+    
+    /// <summary>
+    /// Deletes the guild. Requires the caller to be the owner of the guild.
+    /// </summary>
+    /// <param name="guildId">ID of the guild to delete.</param>
+    /// <param name="password">Your account password.</param>
+    /// <exception cref="UnauthorizedException">Thrown when the client is not the owner of the guild.</exception>
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task DeleteGuildAsync(ulong guildId, string password) => ApiClient.DeleteGuildAsync(guildId, password);
+
+    /// <summary>
+    /// Gets the guild member.
+    /// </summary>
+    /// <param name="guild">The guild to get the member.</param>
+    /// <param name="memberId">ID of the member to get.</param>
+    /// <returns>Requested member.</returns>
+    public Task<KuracordMember> GetGuildMemberAsync(KuracordGuild guild, ulong memberId) => GetGuildMemberAsync(guild.Id, memberId);
+
+    /// <summary>
+    /// Gets the guild member.
+    /// </summary>
+    /// <param name="guildId">ID of the guild to get the member.</param>
+    /// <param name="memberId">ID of the member to get.</param>
+    /// <returns>Requested member.</returns>
+    public Task<KuracordMember> GetGuildMemberAsync(ulong guildId, ulong memberId) => ApiClient.GetMemberAsync(guildId, memberId);
 
     /// <summary>
     /// Gets the collection with the guild members.
@@ -306,12 +344,25 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     #region Channel
 
     /// <summary>
+    /// Gets a channel from cache.
+    /// </summary>
+    /// <param name="channelId">The ID of the channel to get.</param>
+    /// <returns>Requested channel. Will be null if it was not found in cache.</returns>
+    /// <exception cref="Exceptions.NotFoundException">Thrown when the channel does not exist.</exception>
+    /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
+    /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public KuracordChannel? GetChannel(ulong channelId) => InternalGetCachedChannel(channelId, false);
+
+    /// <summary>
     /// Gets a channel
     /// </summary>
-    /// <param name="id">The ID of the channel to get.</param>
+    /// <param name="guild">The guild where the required channel is located.</param>
+    /// <param name="channelId">The ID of the channel to get.</param>
     /// <returns>Requested channel.</returns>
-    /// <exception cref="KeyNotFoundException">Thrown when the channel does not exist.</exception>
-    public KuracordChannel GetChannel(ulong id) => InternalGetCachedChannel(id)!;
+    /// <exception cref="Exceptions.NotFoundException">Thrown when the channel does not exist.</exception>
+    /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
+    /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task<KuracordChannel> GetChannelAsync(KuracordGuild guild, ulong channelId) => GetChannelAsync(guild.Id, channelId);
 
     /// <summary>
     /// Gets a channel
@@ -322,8 +373,45 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     /// <exception cref="Exceptions.NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
     /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
-    public async Task<KuracordChannel> GetChannelAsync(ulong guildId, ulong channelId) => 
-        InternalGetCachedChannel(channelId, false) ?? await ApiClient.GetChannelAsync(guildId, channelId).ConfigureAwait(false);
+    public Task<KuracordChannel> GetChannelAsync(ulong guildId, ulong channelId) => ApiClient.GetChannelAsync(guildId, channelId);
+
+    /// <summary>
+    /// Modifies a channel.
+    /// </summary>
+    /// <param name="guild">The guild where the channel to modify is located.</param>
+    /// <param name="channelId">ID of the channel to modify.</param>
+    /// <param name="name">New channel name.</param>
+    /// <returns>Modified channel.</returns>
+    /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.Administrator"/> permission.</exception>
+    /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
+    /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task<KuracordChannel> ModifyChannelAsync(KuracordGuild guild, ulong channelId, string name) => ModifyChannelAsync(guild.Id, channelId, name);
+    
+    /// <summary>
+    /// Modifies a channel.
+    /// </summary>
+    /// <param name="channel">The channel to modify.</param>
+    /// <param name="name">New channel name.</param>
+    /// <returns>Modified channel.</returns>
+    /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.Administrator"/> permission.</exception>
+    /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
+    /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task<KuracordChannel> ModifyChannelAsync(KuracordChannel channel, string name) => ModifyChannelAsync(channel.Guild!.Id, channel.Id, name);
+    
+    /// <summary>
+    /// Modifies a channel.
+    /// </summary>
+    /// <param name="guildId">ID of the guild where the channel to modify is located.</param>
+    /// <param name="channelId">ID of the channel to modify.</param>
+    /// <param name="name">New channel name.</param>
+    /// <returns>Modified channel.</returns>
+    /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.Administrator"/> permission.</exception>
+    /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
+    /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task<KuracordChannel> ModifyChannelAsync(ulong guildId, ulong channelId, string name) => ApiClient.ModifyChannelAsync(guildId, channelId, name);
 
     /// <summary>
     /// Creates a new text channel in the guild.
@@ -362,36 +450,19 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     /// <exception cref="Exceptions.NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
     /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
-    public Task<KuracordMessage> SendMessageAsync(KuracordChannel channel, string content) => ApiClient.CreateMessageAsync(channel.Id, content);
+    public Task<KuracordMessage> SendMessageAsync(KuracordChannel channel, string content) => SendMessageAsync(channel.Guild!.Id, channel.Id, content);
 
     /// <summary>
     /// Sends a message.
     /// </summary>
-    /// <param name="channelId">The ID of the channel to send to.</param>
-    /// <param name="content">Message content to send.</param>
-    /// <returns>The Kuracord Message that was sent.</returns>
-    /// <exception cref="Exceptions.NotFoundException">Thrown when the channel does not exist.</exception>
-    /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
-    public Task<KuracordMessage> SendMessageAsync(ulong channelId, string content) {
-        KuracordChannel channel = GetChannel(channelId);
-        return SendMessageAsync(channel, content);
-    }
-
-    /// <summary>
-    /// Sends a message.
-    /// </summary>
-    /// <param name="guildId">ID of the guild where the required channel is located.</param>
+    /// <param name="guildId">ID of the guild where the channel to send to is located.</param>
     /// <param name="channelId">ID of the channel to send to.</param>
     /// <param name="content">Message content to send.</param>
     /// <returns>The Kuracord Message that was sent.</returns>
     /// <exception cref="Exceptions.NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
     /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
-    public async Task<KuracordMessage> SendMessageAsync(ulong guildId, ulong channelId, string content) {
-        KuracordChannel channel = await GetChannelAsync(guildId, channelId).ConfigureAwait(false);
-        return await SendMessageAsync(channel, content).ConfigureAwait(false);
-    }
+    public Task<KuracordMessage> SendMessageAsync(ulong guildId, ulong channelId, string content) => ApiClient.CreateMessageAsync(guildId, channelId, content);
 
     /// <summary>
     /// Returns a specific message.
@@ -402,20 +473,21 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.ViewChannels"/> permission.</exception>
     /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="ServerErrorException">Thrown when Discord is unable to process the request.</exception>
-    public Task<KuracordMessage> GetMessageAsync(KuracordChannel channel, ulong messageId) => GetMessageAsync(channel.Id, messageId);
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task<KuracordMessage> GetMessageAsync(KuracordChannel channel, ulong messageId) => GetMessageAsync(channel.Guild!.Id, channel.Id, messageId);
 
     /// <summary>
     /// Returns a specific message.
     /// </summary>
+    /// <param name="guildId">ID of the guild where the required message is located.</param>
     /// <param name="channelId">ID of the channel where the required message is located.</param>
     /// <param name="messageId">ID of the message to get.</param>
     /// <returns>Requested message.</returns>
     /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.ViewChannels"/> permission.</exception>
     /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="ServerErrorException">Thrown when Discord is unable to process the request.</exception>
-    public Task<KuracordMessage> GetMessageAsync(ulong channelId, ulong messageId) => ApiClient.GetMessageAsync(channelId, messageId);
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task<KuracordMessage> GetMessageAsync(ulong guildId, ulong channelId, ulong messageId) => ApiClient.GetMessageAsync(guildId, channelId, messageId);
 
     /// <summary>
     /// Returns a list of messages from the last message in the channel.
@@ -425,8 +497,8 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.ViewChannels"/> permission.</exception>
     /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="ServerErrorException">Thrown when Discord is unable to process the request.</exception>
-    public Task<IReadOnlyList<KuracordMessage>> GetMessagesAsync(KuracordChannel channel) => GetMessagesAsync(channel.Id);
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task<IReadOnlyList<KuracordMessage>> GetMessagesAsync(KuracordChannel channel) => GetMessagesAsync(channel.Guild!.Id, channel.Id);
 
     /// <summary>
     /// Returns a list of messages from the last message in the channel.
@@ -435,8 +507,8 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.ViewChannels"/> permission.</exception>
     /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="ServerErrorException">Thrown when Discord is unable to process the request.</exception>
-    public Task<IReadOnlyList<KuracordMessage>> GetMessagesAsync(ulong channelId) => ApiClient.GetMessagesAsync(channelId);
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task<IReadOnlyList<KuracordMessage>> GetMessagesAsync(ulong guildId, ulong channelId) => ApiClient.GetMessagesAsync(guildId, channelId);
 
     /// <summary>
     /// Deletes a message.
@@ -445,8 +517,8 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.Administrator"/> permission.</exception>
     /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="ServerErrorException">Thrown when Discord is unable to process the request.</exception>
-    public Task DeleteMessageAsync(KuracordMessage message) => DeleteMessageAsync(message.Channel.Id, message.Id);
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task DeleteMessageAsync(KuracordMessage message) => DeleteMessageAsync(message.Guild.Id, message.Channel.Id, message.Id);
     
     /// <summary>
     /// Deletes a message.
@@ -456,19 +528,20 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.Administrator"/> permission.</exception>
     /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="ServerErrorException">Thrown when Discord is unable to process the request.</exception>
-    public Task DeleteMessageAsync(KuracordChannel channel, ulong messageId) => DeleteMessageAsync(channel.Id, messageId);
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task DeleteMessageAsync(KuracordChannel channel, ulong messageId) => DeleteMessageAsync(channel.Guild!.Id, channel.Id, messageId);
     
     /// <summary>
     /// Deletes a message.
     /// </summary>
+    /// <param name="guildId">ID of the guild where the required message to delete is located.</param>
     /// <param name="channelId">ID of the channel in where the required message to delete is located.</param>
     /// <param name="messageId">ID of the message to be deleted.</param>
     /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.Administrator"/> permission.</exception>
     /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="ServerErrorException">Thrown when Discord is unable to process the request.</exception>
-    public Task DeleteMessageAsync(ulong channelId, ulong messageId) => ApiClient.DeleteMessageAsync(channelId, messageId);
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task DeleteMessageAsync(ulong guildId, ulong channelId, ulong messageId) => ApiClient.DeleteMessageAsync(guildId, channelId, messageId);
     
     /// <summary>
     /// Edits the message.
@@ -479,8 +552,8 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     /// <exception cref="Exceptions.UnauthorizedException">Thrown when the client tried to modify a message not sent by them.</exception>
     /// <exception cref="Exceptions.NotFoundException">Thrown when the member does not exist.</exception>
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="Exceptions.ServerErrorException">Thrown when Discord is unable to process the request.</exception>
-    public Task<KuracordMessage> EditMessageAsync(KuracordMessage message, string content) => EditMessageAsync(message.Channel.Id, message.Id, content);
+    /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task<KuracordMessage> EditMessageAsync(KuracordMessage message, string content) => EditMessageAsync(message.Guild.Id, message.Channel.Id, message.Id, content);
 
     /// <summary>
     /// Edits the message.
@@ -492,12 +565,13 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     /// <exception cref="Exceptions.UnauthorizedException">Thrown when the client tried to modify a message not sent by them.</exception>
     /// <exception cref="Exceptions.NotFoundException">Thrown when the member does not exist.</exception>
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="Exceptions.ServerErrorException">Thrown when Discord is unable to process the request.</exception>
-    public Task<KuracordMessage> EditMessageAsync(KuracordChannel channel, ulong messageId, string content) => EditMessageAsync(channel.Id, messageId, content);
+    /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task<KuracordMessage> EditMessageAsync(KuracordChannel channel, ulong messageId, string content) => EditMessageAsync(channel.Guild!.Id, channel.Id, messageId, content);
     
     /// <summary>
     /// Edits the message.
     /// </summary>
+    /// <param name="guildId">ID of the guild where the required message to edit is located.</param>
     /// <param name="channelId">ID of the channel where the required message to edit is located.</param>
     /// <param name="messageId">ID of the message to edit.</param>
     /// <param name="content">New content.</param>
@@ -505,8 +579,8 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     /// <exception cref="Exceptions.UnauthorizedException">Thrown when the client tried to modify a message not sent by them.</exception>
     /// <exception cref="Exceptions.NotFoundException">Thrown when the member does not exist.</exception>
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="Exceptions.ServerErrorException">Thrown when Discord is unable to process the request.</exception>
-    public Task<KuracordMessage> EditMessageAsync(ulong channelId, ulong messageId, string content) => ApiClient.EditMessageAsync(channelId, messageId, content);
+    /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task<KuracordMessage> EditMessageAsync(ulong guildId, ulong channelId, ulong messageId, string content) => ApiClient.EditMessageAsync(guildId, channelId, messageId, content);
 
     #endregion
 
@@ -595,13 +669,12 @@ public sealed partial class KuracordClient : BaseKuracordClient {
             if (guild.Channels.TryGetValue(channelId, out KuracordChannel? foundChannel)) return foundChannel;
         }
 
-        if (throwException)
-            throw new KeyNotFoundException($"Cannot find channel with id {channelId}.");
+        if (throwException) throw new KeyNotFoundException($"Cannot find channel with id {channelId}.");
                 
         return null;
     }
     
-    internal KuracordGuild? InternalGetCachedGuild(ulong? guildId) => _guilds != null && guildId.HasValue && _guilds.TryGetValue(guildId.Value, out KuracordGuild? guild) ? guild : null;
+    internal KuracordGuild? InternalGetCachedGuild(ulong? guildId) => _guilds != null! && guildId.HasValue && _guilds.TryGetValue(guildId.Value, out KuracordGuild? guild) ? guild : null;
 
     void UpdateCachedGuild(KuracordGuild newGuild, JArray? rawMembers) {
         if (_disposed) return;
@@ -641,7 +714,7 @@ public sealed partial class KuracordClient : BaseKuracordClient {
         if (newGuild._roles.Any())
             foreach (KuracordRole role in newGuild._roles.Where(role => !guild._roles!.Exists(r => r.Id == role.Id))) {
                 role.Kuracord = this;
-                role._guild_id = newGuild.Id;
+                role._guildId = newGuild.Id;
                 
                 guild._roles!.Add(role);
             }
@@ -724,7 +797,7 @@ public sealed partial class KuracordClient : BaseKuracordClient {
 
         DisconnectAsync().ConfigureAwait(false).GetAwaiter().GetResult();
         ApiClient.Rest.Dispose();
-        CurrentUser = null;
+        CurrentUser = null!;
 
         try {
             _cancelTokenSource?.Cancel();

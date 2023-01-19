@@ -1,13 +1,12 @@
 ﻿using System.Collections.Concurrent;
 using KSharpPlus.Entities.Channel;
 using KSharpPlus.Entities.Guild;
-using KSharpPlus.Enums;
+using KSharpPlus.Entities.User;
 using KSharpPlus.EventArgs;
 using KSharpPlus.EventArgs.Guild;
 using KSharpPlus.EventArgs.Socket;
 using KSharpPlus.Logging;
 using KSharpPlus.Net.Abstractions.Gateway;
-using KSharpPlus.Net.Abstractions.Transport;
 using KSharpPlus.Net.Serialization;
 using KSharpPlus.Net.WebSocket;
 using Microsoft.Extensions.Logging;
@@ -44,7 +43,7 @@ public sealed partial class KuracordClient {
     #region Internal Connection Methods
 
     Task InternalReconnectAsync(bool startNewSession = false, int code = 1000, string message = "") {
-        if (startNewSession) _sessionId = null;
+        if (startNewSession) _sessionId = null!;
 
         _webSocketClient.DisconnectAsync(code, message);
         return Task.CompletedTask;
@@ -52,7 +51,7 @@ public sealed partial class KuracordClient {
 
     /* GATEWAY VERSION IS IN THIS METHOD!! If you need to update the Gateway Version, look for gwuri ~Velvet */
     internal async Task InternalConnectAsync() {
-        SocketLock socketLock = null;
+        SocketLock? socketLock = null;
 
         try {
             await InitializeAsync().ConfigureAwait(false);
@@ -68,9 +67,7 @@ public sealed partial class KuracordClient {
 
         _webSocketClient = Configuration.WebSocketClientFactory(Configuration.Proxy);
 
-        _payloadDecompressor = Configuration.GatewayCompressionLevel != GatewayCompressionLevel.None
-            ? new PayloadDecompressor(Configuration.GatewayCompressionLevel)
-            : null!;
+        _payloadDecompressor = new PayloadDecompressor();
 
         _cancelTokenSource = new CancellationTokenSource();
         _cancelToken = _cancelTokenSource.Token;
@@ -97,7 +94,7 @@ public sealed partial class KuracordClient {
                 case SocketBinaryMessageEventArgs ebin: {
                     using MemoryStream ms = new();
 
-                    if (!_payloadDecompressor?.TryDecompress(new ArraySegment<byte>(ebin.Message), ms) ?? false) {
+                    if (!_payloadDecompressor.TryDecompress(new ArraySegment<byte>(ebin.Message), ms)) {
                         Logger.LogError(LoggerEvents.WebSocketReceiveFailure, "Payload decompression failed");
                         return;
                     }
@@ -149,11 +146,11 @@ public sealed partial class KuracordClient {
                 break;
 
             case GatewayOpCode.Hello:
-                await OnHelloAsync((payload.Data as JObject).ToKuracordObject<GatewayHello>()).ConfigureAwait(false);
+                await OnHelloAsync((payload.Data as JObject)!.ToKuracordObject<GatewayHello>()).ConfigureAwait(false);
                 break;
             
             case GatewayOpCode.Ready:
-                await OnReadyAsync((payload.Data as JObject).ToKuracordObject<GatewayReady>()).ConfigureAwait(false);
+                await OnReadyAsync((payload.Data as JObject)!.ToKuracordObject<GatewayReady>()).ConfigureAwait(false);
                 break;
             
             case GatewayOpCode.HeartbeatAck:
@@ -161,7 +158,7 @@ public sealed partial class KuracordClient {
                 break;
 
             default:
-                Logger.LogWarning(LoggerEvents.WebSocketReceive, $"Unknown Kuracord opcode: {payload.OpCode}\nPayload: {payload.Data}");
+                Logger.LogWarning(LoggerEvents.WebSocketReceive, $"Unknown Kuracord opcode: {payload!.OpCode}\nPayload: {payload.Data}");
                 break;
         }
     }
@@ -185,7 +182,7 @@ public sealed partial class KuracordClient {
     }
 
     internal async Task OnReadyAsync(GatewayReady ready) {
-        TransportUser readyUser = ready.CurrentUser;
+        KuracordUser readyUser = ready.CurrentUser;
         CurrentUser.Username = readyUser.Username;
         CurrentUser.Discriminator = readyUser.Discriminator;
         CurrentUser.AvatarUrl = readyUser.AvatarUrl;
@@ -203,7 +200,7 @@ public sealed partial class KuracordClient {
         
         _guilds.Clear();
 
-        foreach (KuracordMember gMember in readyUser.GuildsMember) {
+        foreach (KuracordMember gMember in readyUser.GuildsMember!) {
             KuracordGuild guild = await GetGuildAsync(gMember.Guild.Id);
             guild.Kuracord = this;
             
@@ -218,7 +215,7 @@ public sealed partial class KuracordClient {
 
             foreach (KuracordRole role in gMember.Guild.Roles.Values) {
                 role.Kuracord = this;
-                role._guild_id = gMember.Guild.Id;
+                role._guildId = gMember.Guild.Id;
             }
 
             foreach (KuracordMember member in gMember.Guild.Members.Values) {
@@ -327,7 +324,7 @@ public sealed partial class KuracordClient {
     
     #region Semaphore Methods
 
-    SocketLock GetSocketLock() => SocketLocks.GetOrAdd(CurrentUser.Id, appId => new SocketLock(appId, 1));
+    SocketLock GetSocketLock() => SocketLocks.GetOrAdd(CurrentUser.Id, _ => new SocketLock(1));
 
     #endregion
 }

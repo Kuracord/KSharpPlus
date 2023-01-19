@@ -20,36 +20,18 @@ public abstract class BaseRestRequest {
     public RestRequestMethod Method { get; }
 
     /// <summary>
-    /// Gets the generic path (no parameters) for this request.
-    /// </summary>
-    public string Route { get; }
-
-    /// <summary>
     /// Gets the headers sent with this request.
     /// </summary>
-    public IReadOnlyDictionary<string, string> Headers { get; }
-
-    /// <summary>
-    /// Gets the override for the rate limit bucket wait time.
-    /// </summary>
-    public double? RateLimitWaitOverride { get; }
-
-    /// <summary>
-    /// Gets the rate limit bucket this request is in.
-    /// </summary>
-    internal RateLimitBucket RateLimitBucket { get; }
+    public IReadOnlyDictionary<string, string> Headers { get; } = null!;
 
     /// <summary>
     /// Creates a new <see cref="BaseRestRequest" /> with specified parameters.
     /// </summary>
     /// <param name="client"><see cref="KuracordClient" /> from which this request originated.</param>
-    /// <param name="bucket">Rate limit bucket to place this request in.</param>
     /// <param name="url">Uri to which this request is going to be sent to.</param>
     /// <param name="method">Method to use for this request,</param>
-    /// <param name="route">The generic route the request url will use.</param>
     /// <param name="headers">Additional headers for this request.</param>
-    /// <param name="ratelimitWaitOverride">Override for ratelimit bucket wait time.</param>
-    internal BaseRestRequest(BaseKuracordClient client, Uri url, RestRequestMethod method, IReadOnlyDictionary<string, string> headers = null!) {
+    internal BaseRestRequest(BaseKuracordClient client, Uri url, RestRequestMethod method, IReadOnlyDictionary<string, string>? headers = null) {
         Kuracord = client;
         RequestTaskSource = new TaskCompletionSource<RestResponse>();
         Url = url;

@@ -14,18 +14,18 @@ public class KuracordInviteGuild : SnowflakeObject {
     /// <summary>
     /// Gets the name of the guild.
     /// </summary>
-    [JsonProperty("name")] public string Name { get; internal set; }
+    [JsonProperty("name")] public string Name { get; internal set; } = null!;
     
     /// <summary>
     /// Gets the guild's description.
     /// </summary>
     [JsonProperty("description", NullValueHandling = NullValueHandling.Ignore)] 
-    public string Description { get; internal set; }
+    public string Description { get; internal set; } = null!;
 
     /// <summary>
     /// Gets the guild's vanity invite code.
     /// </summary>
-    [JsonProperty("vanityUrl")] public string VanityCode { get; internal set; }
+    [JsonProperty("vanityUrl")] public string VanityCode { get; internal set; } = null!;
     
     /// <summary>
     /// Gets the guild icon's url.
@@ -36,7 +36,7 @@ public class KuracordInviteGuild : SnowflakeObject {
     /// Gets the guild icon's hash.
     /// </summary>
     [JsonProperty("icon", NullValueHandling = NullValueHandling.Ignore)]
-    public string IconHash { get; internal set; }
+    public string IconHash { get; internal set; } = null!;
     
     /// <summary>
     /// Gets whether the guild is disabled.

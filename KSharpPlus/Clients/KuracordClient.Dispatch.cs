@@ -27,12 +27,12 @@ public sealed partial class KuracordClient {
             return;
         }
 
+        KuracordGuild guild;
         KuracordChannel channel;
         ulong guildId;
         ulong channelId;
-        KuracordUser? user = default;
-        KuracordMember? member = default;
-        JToken? rawMember;
+        KuracordUser? user;
+        KuracordMember? member;
 
         switch (payload.EventName.ToLowerInvariant()) {
 
@@ -45,6 +45,10 @@ public sealed partial class KuracordClient {
             case "guild_update":
                 await OnGuildUpdateEventAsync(data.ToKuracordObject<KuracordGuild>(), (JArray)data["members"]!).ConfigureAwait(false);
                 break;
+            
+            case "guild_remove":
+                await OnGuildRemoveEventAsync((ulong)data["guildId"]!).ConfigureAwait(false);
+                break;
 
             #endregion
 
@@ -54,25 +58,29 @@ public sealed partial class KuracordClient {
                 channel = data.ToKuracordObject<KuracordChannel>();
                 await OnChannelCreateEventAsync(channel).ConfigureAwait(false); 
                 break;
+            
+            case "channel_update":
+                await OnChannelUpdateEventAsync(data.ToKuracordObject<KuracordChannel>()).ConfigureAwait(false);
+                break;
+            
+            case "channel_remove":
+                await OnChannelDeleteEventAsync((ulong)data["guildId"]!, (ulong)data["channelId"]!).ConfigureAwait(false);
+                break;
 
             #endregion
 
             #region Message
 
             case "message_create":
-                rawMember = data["member"];
-
-                if (rawMember != null) member = rawMember.ToKuracordObject<KuracordMember>();
+                member = data["member"]?.ToKuracordObject<KuracordMember>();
 
                 await OnMessageCreateEventAsync(data.ToKuracordObject<KuracordMessage>(), data["author"]!.ToKuracordObject<KuracordUser>(), member!).ConfigureAwait(false);
                 break;
             
             case "message_update":
-                rawMember = data["member"];
+                member = data["member"]?.ToKuracordObject<KuracordMember>();
 
-                if (rawMember != null) member = rawMember.ToKuracordObject<KuracordMember>();
-
-                await OnMessageUpdateEventAsync(data.ToKuracordObject<KuracordMessage>(), data["author"]!.ToKuracordObject<KuracordUser>(), member).ConfigureAwait(false);
+                await OnMessageUpdateEventAsync(data.ToKuracordObject<KuracordMessage>(), data["author"]!.ToKuracordObject<KuracordUser>(), member!).ConfigureAwait(false);
                 break;
             
             // delete event does *not* include message object
@@ -92,6 +100,17 @@ public sealed partial class KuracordClient {
             case "member_update":
                 guildId = (ulong)data["guild"]!["id"]!;
                 await OnMemberUpdatedEventAsync(data.ToKuracordObject<KuracordMember>(), _guilds[guildId]).ConfigureAwait(false);
+                break;
+            
+            case "member_leave":
+                ulong userId = (ulong)data["userId"]!;
+                ulong memberId = (ulong)data["memberId"]!;
+                guildId = (ulong)data["guildId"]!;
+
+                if (userId != CurrentUser.Id) member = await GetGuildMemberAsync(guildId, memberId).ConfigureAwait(false);
+                else member = _guilds[guildId].Members[memberId];
+
+                await OnMemberLeaveEventAsync(member, _guilds[guildId]).ConfigureAwait(false);
                 break;
 
             #endregion
@@ -139,7 +158,7 @@ public sealed partial class KuracordClient {
 
         foreach (KuracordRole role in guild._roles) {
             role.Kuracord = this;
-            role._guild_id = guild.Id;
+            role._guildId = guild.Id;
         }
 
         bool old = Volatile.Read(ref _guildDownloadCompleted);
@@ -198,7 +217,7 @@ public sealed partial class KuracordClient {
         }
 
         foreach (KuracordRole role in guild._roles) {
-            role._guild_id = guild.Id;
+            role._guildId = guild.Id;
             role.Kuracord = this;
         }
 
@@ -208,6 +227,12 @@ public sealed partial class KuracordClient {
         }
         
         await _guildUpdated.InvokeAsync(this, new GuildUpdateEventArgs(oldGuild, guild)).ConfigureAwait(false);
+    }
+
+    internal async Task OnGuildRemoveEventAsync(ulong guildId) {
+        if (!_guilds.TryRemove(guildId, out KuracordGuild? guild)) return;
+
+        await _guildDeleted.InvokeAsync(this, new GuildDeleteEventArgs(guild)).ConfigureAwait(false);
     }
 
     #endregion
@@ -223,6 +248,43 @@ public sealed partial class KuracordClient {
         if (_guilds[channel.GuildId.Value]._channels!.All(c => c.Id != channel.Id)) _guilds[channel.GuildId.Value]._channels!.Add(channel);
 
         await _channelCreated.InvokeAsync(this, new ChannelCreateEventArgs(channel)).ConfigureAwait(false);
+    }
+
+    internal async Task OnChannelUpdateEventAsync(KuracordChannel channel) {
+        channel.Kuracord = this;
+        
+        KuracordGuild guild = channel.Guild!;
+        KuracordChannel? channelNew = InternalGetCachedChannel(channel.Id);
+        KuracordChannel channelOld = null!;
+
+        if (channelNew != null) {
+            channelOld = new KuracordChannel {
+                Kuracord = this,
+                GuildId = channelNew.GuildId,
+                Id = channelNew.Id,
+                Name = channelNew.Name,
+                Type = channelNew.Type
+            };
+
+            channelNew.Name = channel.Name;
+            channelNew.Type = channel.Type;
+        } else if (guild != null!) guild._channels!.Replace(c => c.Id == channel.Id, channel);
+        
+        await _channelUpdated.InvokeAsync(this, new ChannelUpdateEventArgs(channelOld, channelNew!, guild!)).ConfigureAwait(false);
+    }
+
+    internal async Task OnChannelDeleteEventAsync(ulong guildId, ulong channelId) {
+        if (!_guilds.TryGetValue(guildId, out KuracordGuild? guild)) return;
+        guild.Kuracord = this;
+        
+        KuracordChannel? channel = guild._channels?.FirstOrDefault(c => c.Id == channelId);
+        if (channel == null) return;
+
+        channel.Kuracord = this;
+
+        guild._channels?.RemoveAll(c => c.Id == channelId);
+
+        await _channelDeleted.InvokeAsync(this, new ChannelDeleteEventArgs(guild, channel)).ConfigureAwait(false);
     }
 
     #endregion
@@ -328,6 +390,19 @@ public sealed partial class KuracordClient {
         MemberUpdatedEventArgs args = new(memberBefore, memberAfter, guild);
 
         await _memberUpdated.InvokeAsync(this, args).ConfigureAwait(false);
+    }
+
+    internal async Task OnMemberLeaveEventAsync(KuracordMember member, KuracordGuild guild) {
+        member.Kuracord = this;
+        member._guildId = guild.Id;
+        
+        guild._members!.RemoveAll(m => m.Id == member.Id);
+
+        UpdateUserCache(member.User);
+
+        MemberLeaveEventArgs args = new(member, guild);
+
+        await _memberLeave.InvokeAsync(this, args).ConfigureAwait(false);
     }
 
     #endregion

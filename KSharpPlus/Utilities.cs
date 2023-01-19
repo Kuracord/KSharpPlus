@@ -15,9 +15,9 @@ public static class Utilities {
     /// <summary>
     /// Gets the version of the library
     /// </summary>
-    static string VersionHeader { get; set; }
+    static string VersionHeader { get; }
 
-    static Dictionary<Permissions, string> PermissionStrings { get; set; }
+    static Dictionary<Permissions, string> PermissionStrings { get; }
     
     internal static UTF8Encoding UTF8 { get; } = new(false);
 
@@ -59,7 +59,7 @@ public static class Utilities {
     internal static string GetFormattedToken(BaseKuracordClient client) => GetFormattedToken(client.Configuration);
 
     internal static string GetFormattedToken(KuracordConfiguration config) => config.TokenType switch {
-        TokenType.User => config.Token,
+        TokenType.User => $"User {config.Token}",
         TokenType.Bearer => $"Bearer {config.Token}",
         TokenType.Bot => $"Bot {config.Token}",
         _ => throw new ArgumentException("Invalid token type specified.", nameof(config.Token)),
@@ -95,8 +95,19 @@ public static class Utilities {
     
     internal static void LogTaskFault(this Task task, ILogger logger, LogLevel level, EventId eventId, string message) {
         if (task == null) throw new ArgumentNullException(nameof(task));
-        if (logger == null) return;
+        if (logger == null!) return;
 
         task.ContinueWith(t => logger.Log(level, eventId, t.Exception, message), TaskContinuationOptions.OnlyOnFaulted);
+    }
+    
+    public static List<T> Replace<T>(this List<T> source, Predicate<T> predicate, T newValue) {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+        if (newValue == null) throw new ArgumentNullException(nameof(newValue));
+
+        int index = source.FindIndex(predicate);
+        if (index != -1) source[index] = newValue;
+
+        return source;
     }
 }

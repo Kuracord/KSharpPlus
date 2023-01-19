@@ -8,7 +8,6 @@ using KSharpPlus.Entities.Invite;
 using KSharpPlus.Entities.User;
 using KSharpPlus.Logging;
 using KSharpPlus.Net.Abstractions.Rest;
-using KSharpPlus.Net.Abstractions.Transport;
 using KSharpPlus.Net.Serialization;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -17,7 +16,7 @@ using Newtonsoft.Json.Linq;
 namespace KSharpPlus.Net.Rest; 
 
 public sealed class KuracordApiClient {
-    internal BaseKuracordClient Kuracord { get; }
+    BaseKuracordClient Kuracord { get; } = null!;
     internal RestClient Rest { get; }
 
     internal KuracordApiClient(BaseKuracordClient client) {
@@ -26,11 +25,10 @@ public sealed class KuracordApiClient {
     }
     
     // This is for meta-clients, such as the webhook client
-    internal KuracordApiClient(IWebProxy proxy, TimeSpan timeout, bool useRelativeRateLimit, ILogger logger) => 
-        Rest = new RestClient(proxy, timeout, useRelativeRateLimit, logger);
+    internal KuracordApiClient(IWebProxy proxy, TimeSpan timeout, ILogger logger) => Rest = new RestClient(proxy, timeout, logger);
 
     KuracordMessage PrepareMessage(JToken rawMessage) {
-        TransportUser author = rawMessage["author"]!.ToKuracordObject<TransportUser>();
+        KuracordUser author = rawMessage["author"]!.ToKuracordObject<KuracordUser>();
         KuracordMessage message = rawMessage.ToKuracordObject<KuracordMessage>();
         message.Kuracord = Kuracord;
 
@@ -39,16 +37,16 @@ public sealed class KuracordApiClient {
         return message;
     }
 
-    void PopulateMessage(TransportUser author, KuracordMessage message) {
+    void PopulateMessage(KuracordUser author, KuracordMessage message) {
         KuracordGuild guild = message.Channel.Guild ?? message.Guild;
 
         if (author.IsBot && int.Parse(author.Discriminator) == 0) {
             message.Author = new KuracordUser(author) { Kuracord = Kuracord };
         } else {
-            if (!Kuracord.UserCache.TryGetValue(author.Id, out KuracordUser user))
+            if (!Kuracord.UserCache.TryGetValue(author.Id, out KuracordUser? user))
                 Kuracord.UserCache[author.Id] = user = new KuracordUser(author) { Kuracord = Kuracord };
 
-            if (guild != null) {
+            if (guild != null!) {
                 if (guild.Members.Values.FirstOrDefault(m => m.User.Id == author.Id) == null) {
                     KuracordMember member = new(user) { Kuracord = Kuracord, _guildId = guild.Id };
                     guild._members!.Add(member);
@@ -59,13 +57,13 @@ public sealed class KuracordApiClient {
         }
     }
 
-    Task<RestResponse> DoRequestAsync(BaseKuracordClient client, Uri uri, RestRequestMethod method, IReadOnlyDictionary<string, string> headers = null, string payload = null) {
+    async Task<RestResponse> DoRequestAsync(BaseKuracordClient client, Uri uri, RestRequestMethod method, IReadOnlyDictionary<string, string>? headers = null, string? payload = null) {
         RestRequest request = new(client, uri, method, headers, payload);
 
-        if (Kuracord != null) Rest.ExecuteRequestAsync(request).LogTaskFault(Kuracord.Logger, LogLevel.Error, LoggerEvents.RestError, "Error while executing request.");
-        else Rest.ExecuteRequestAsync(request);
+        if (Kuracord != null!) Rest.ExecuteRequestAsync(request).LogTaskFault(Kuracord.Logger, LogLevel.Error, LoggerEvents.RestError, "Error while executing request.");
+        else await Rest.ExecuteRequestAsync(request).ConfigureAwait(false);
 
-        return request.WaitForCompletionAsync();
+        return await request.WaitForCompletionAsync().ConfigureAwait(false);
     }
 
     #region Guild
@@ -79,7 +77,7 @@ public sealed class KuracordApiClient {
 
         foreach (KuracordRole role in guild._roles ??= new List<KuracordRole>()) {
             role.Kuracord = Kuracord;
-            role._guild_id = guild.Id;
+            role._guildId = guild.Id;
         }
 
         foreach (KuracordMember member in guild._members ??= new List<KuracordMember>()) {
@@ -110,7 +108,7 @@ public sealed class KuracordApiClient {
         
         foreach (KuracordRole role in guild._roles ??= new List<KuracordRole>()) {
             role.Kuracord = Kuracord;
-            role._guild_id = guild.Id;
+            role._guildId = guild.Id;
         }
 
         foreach (KuracordMember member in guild._members ??= new List<KuracordMember>()) {
@@ -139,7 +137,7 @@ public sealed class KuracordApiClient {
 
         foreach (KuracordRole role in guild._roles ??= new List<KuracordRole>()) {
             role.Kuracord = Kuracord;
-            role._guild_id = guild.Id;
+            role._guildId = guild.Id;
         }
 
         foreach (KuracordMember member in guild._members ??= new List<KuracordMember>()) {
@@ -155,26 +153,33 @@ public sealed class KuracordApiClient {
         return guild;
     }
 
+    internal Task DeleteGuildAsync(ulong guildId, string password) {
+        RestGuildDeletePayload payload = new(password); 
+        
+        Uri uri = Utilities.GetApiUriFor($"{Endpoints.Guilds}/{guildId}");
+
+        return DoRequestAsync(Kuracord, uri, RestRequestMethod.DELETE, null, KuracordJson.SerializeObject(payload));
+    }
+
     #endregion
 
     #region Channel
-
+    
     internal async Task<KuracordChannel> GetChannelAsync(ulong guildId, ulong channelId) {
-        IReadOnlyList<KuracordChannel> channels = await GetChannelsAsync(guildId);
-        KuracordChannel? channel = channels.FirstOrDefault(c => c.Id == channelId);
+        Uri uri = Utilities.GetApiUriFor($"{Endpoints.Guilds}/{guildId}{Endpoints.Channels}/{channelId}");
 
-        if (channel == null) throw new KeyNotFoundException($"Cannot find channel with id {channelId}");
-
+        RestResponse rest = await DoRequestAsync(Kuracord, uri, RestRequestMethod.GET).ConfigureAwait(false);
+        
+        KuracordChannel channel = JsonConvert.DeserializeObject<KuracordChannel>(rest.Response)!;
         channel.Kuracord = Kuracord;
-        channel.GuildId = guildId;
-
+        
         return channel;
     }
 
     internal async Task<KuracordChannel> CreateChannelAsync(ulong guildId, string name) {
         if (name is not { Length: > 0 }) throw new ArgumentException("Channel name must not be empty.");
 
-        RestChannelCreatePayload payload = new(name);
+        RestChannelCreateModifyPayload payload = new(name);
 
         Uri uri = Utilities.GetApiUriFor($"{Endpoints.Guilds}/{guildId}{Endpoints.Channels}");
 
@@ -183,6 +188,21 @@ public sealed class KuracordApiClient {
         KuracordChannel channel = JsonConvert.DeserializeObject<KuracordChannel>(rest.Response)!;
         channel.Kuracord = Kuracord;
         channel.GuildId = guildId;
+
+        return channel;
+    }
+
+    internal async Task<KuracordChannel> ModifyChannelAsync(ulong guildId, ulong channelId, string name) {
+        if (name is not { Length: > 0 }) throw new ArgumentException("Channel name must not be empty.");
+        
+        RestChannelCreateModifyPayload payload = new(name);
+        
+        Uri uri = Utilities.GetApiUriFor($"{Endpoints.Guilds}/{guildId}{Endpoints.Channels}/{channelId}");
+
+        RestResponse rest = await DoRequestAsync(Kuracord, uri, RestRequestMethod.PATCH, null, KuracordJson.SerializeObject(payload)).ConfigureAwait(false);
+
+        KuracordChannel channel = JsonConvert.DeserializeObject<KuracordChannel>(rest.Response)!;
+        channel.Kuracord = Kuracord;
 
         return channel;
     }
@@ -201,8 +221,18 @@ public sealed class KuracordApiClient {
         return channels;
     }
 
-    internal async Task<KuracordMessage> GetMessageAsync(ulong channelId, ulong messageId) {
-        Uri uri = Utilities.GetApiUriFor($"{Endpoints.Channels}/{channelId}{Endpoints.Messages}/{messageId}");
+    internal Task DeleteChannelAsync(ulong guildId, ulong channelId) {
+        Uri uri = Utilities.GetApiUriFor($"{Endpoints.Guilds}/{guildId}{Endpoints.Channels}/{channelId}");
+
+        return DoRequestAsync(Kuracord, uri, RestRequestMethod.DELETE);
+    }
+
+    #endregion
+
+    #region Message
+
+    internal async Task<KuracordMessage> GetMessageAsync(ulong guildId, ulong channelId, ulong messageId) {
+        Uri uri = Utilities.GetApiUriFor($"{Endpoints.Guilds}/{guildId}{Endpoints.Channels}/{channelId}{Endpoints.Messages}/{messageId}");
 
         RestResponse rest = await DoRequestAsync(Kuracord, uri, RestRequestMethod.GET).ConfigureAwait(false);
         
@@ -210,8 +240,8 @@ public sealed class KuracordApiClient {
         return message;
     }
 
-    internal async Task<IReadOnlyList<KuracordMessage>> GetMessagesAsync(ulong channelId) {
-        Uri uri = Utilities.GetApiUriFor($"{Endpoints.Channels}/{channelId}{Endpoints.Messages}");
+    internal async Task<IReadOnlyList<KuracordMessage>> GetMessagesAsync(ulong guildId, ulong channelId) {
+        Uri uri = Utilities.GetApiUriFor($"{Endpoints.Guilds}/{guildId}{Endpoints.Channels}/{channelId}{Endpoints.Messages}");
 
         RestResponse rest = await DoRequestAsync(Kuracord, uri, RestRequestMethod.GET).ConfigureAwait(false);
         JArray messagesArr = JArray.Parse(rest.Response);
@@ -219,17 +249,18 @@ public sealed class KuracordApiClient {
         return messagesArr.Select(PrepareMessage).ToList();
     }
 
-    internal async Task DeleteMessageAsync(ulong channelId, ulong messageId) {
-        Uri uri = Utilities.GetApiUriFor($"{Endpoints.Channels}/{channelId}{Endpoints.Messages}/{messageId}");
-        await DoRequestAsync(Kuracord, uri, RestRequestMethod.DELETE).ConfigureAwait(false);
+    internal Task DeleteMessageAsync(ulong guildId, ulong channelId, ulong messageId) {
+        Uri uri = Utilities.GetApiUriFor($"{Endpoints.Guilds}/{guildId}{Endpoints.Channels}/{channelId}{Endpoints.Messages}/{messageId}");
+        
+        return DoRequestAsync(Kuracord, uri, RestRequestMethod.DELETE);
     }
 
-    internal async Task<KuracordMessage> CreateMessageAsync(ulong channelId, string content) {
+    internal async Task<KuracordMessage> CreateMessageAsync(ulong guildId, ulong channelId, string content) {
         if (content is not { Length: > 0 }) throw new ArgumentException("Message content must not be empty.");
 
         RestChannelMessageCreatePayload payload = new(content);
 
-        Uri uri = Utilities.GetApiUriFor($"{Endpoints.Channels}/{channelId}{Endpoints.Messages}");
+        Uri uri = Utilities.GetApiUriFor($"{Endpoints.Guilds}/{guildId}{Endpoints.Channels}/{channelId}{Endpoints.Messages}");
 
         RestResponse rest = await DoRequestAsync(Kuracord, uri, RestRequestMethod.POST, null, KuracordJson.SerializeObject(payload)).ConfigureAwait(false);
 
@@ -237,12 +268,12 @@ public sealed class KuracordApiClient {
         return message;
     }
 
-    internal async Task<KuracordMessage> EditMessageAsync(ulong channelId, ulong messageId, string content) {
+    internal async Task<KuracordMessage> EditMessageAsync(ulong guildId, ulong channelId, ulong messageId, string content) {
         if (content is not { Length: > 0 }) throw new ArgumentException("Message content must not be empty.");
 
         RestChannelMessageModifyPayload payload = new(content);
 
-        Uri uri = Utilities.GetApiUriFor($"{Endpoints.Channels}/{channelId}{Endpoints.Messages}/{messageId}");
+        Uri uri = Utilities.GetApiUriFor($"{Endpoints.Guilds}/{guildId}{Endpoints.Channels}/{channelId}{Endpoints.Messages}/{messageId}");
 
         RestResponse rest = await DoRequestAsync(Kuracord, uri, RestRequestMethod.PATCH, null, KuracordJson.SerializeObject(payload)).ConfigureAwait(false);
         KuracordMessage message = PrepareMessage(JObject.Parse(rest.Response));
@@ -372,7 +403,7 @@ public sealed class KuracordApiClient {
     }
 
     internal async Task<KuracordMember> ModifyMemberAsync(ulong guildId, ulong memberId, string? nickname) {
-        RestGuildMemberModifyPayload payload = new() { Nickname = nickname };
+        RestGuildMemberModifyPayload payload = new(nickname);
 
         Uri uri = Utilities.GetApiUriFor($"{Endpoints.Guilds}/{guildId}{Endpoints.Members}/{memberId}");
         await DoRequestAsync(Kuracord, uri, RestRequestMethod.PATCH, null, KuracordJson.SerializeObject(payload)).ConfigureAwait(false);
@@ -383,6 +414,12 @@ public sealed class KuracordApiClient {
         Kuracord.UpdateUserCache(member.User);
 
         return member;
+    }
+    
+    internal Task DeleteMemberAsync(ulong guildId, ulong memberId) {
+        Uri uri = Utilities.GetApiUriFor($"{Endpoints.Guilds}/{guildId}{Endpoints.Members}/{memberId}");
+        
+        return DoRequestAsync(Kuracord, uri, RestRequestMethod.DELETE);
     }
 
     #endregion

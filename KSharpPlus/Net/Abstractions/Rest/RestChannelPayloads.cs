@@ -2,8 +2,8 @@
 
 namespace KSharpPlus.Net.Abstractions.Rest; 
 
-internal sealed class RestChannelCreatePayload {
-    public RestChannelCreatePayload(string name) => Name = name;
+internal sealed class RestChannelCreateModifyPayload {
+    public RestChannelCreateModifyPayload(string name) => Name = name;
     
     [JsonProperty("name")] public string Name { get; set; }
 }

@@ -4,7 +4,7 @@
 /// Represents the File that should be sent to Kuracord from the <see cref="KuracordMessageBuilder"/>.
 /// </summary>
 public class KuracordMessageFile {
-    internal KuracordMessageFile(string? fileName, Stream stream, long? resetPositionTo, string fileType = null, string contentType = null) {
+    internal KuracordMessageFile(string? fileName, Stream stream, long? resetPositionTo, string fileType = null!, string contentType = null!) {
         FileName = fileName ?? "file";
         FileType = fileType;
         ContentType = contentType;

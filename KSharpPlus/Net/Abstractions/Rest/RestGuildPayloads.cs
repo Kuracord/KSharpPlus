@@ -5,7 +5,7 @@ namespace KSharpPlus.Net.Abstractions.Rest;
 
 internal sealed class RestGuildCreatePayload {
     [JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
-    public string Name { get; set; }
+    public string Name { get; set; } = null!;
     
     [JsonProperty("icon", NullValueHandling = NullValueHandling.Include)]
     public Optional<string> IconBase64 { get; set; }
@@ -20,5 +20,13 @@ internal sealed class RestGuildModifyPayload {
 }
 
 internal sealed class RestGuildMemberModifyPayload {
+    public RestGuildMemberModifyPayload(string? nickname) => Nickname = nickname;
+    
     [JsonProperty("nickname")] public string? Nickname { get; set; }
+}
+
+internal sealed class RestGuildDeletePayload {
+    public RestGuildDeletePayload(string password) => Password = password;
+    
+    [JsonProperty("password")] public string Password { get; set; } = null!;
 }

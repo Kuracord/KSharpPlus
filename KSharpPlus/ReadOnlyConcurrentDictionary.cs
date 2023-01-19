@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace KSharpPlus; 
 
-internal readonly struct ReadOnlyConcurrentDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue> {
+internal readonly struct ReadOnlyConcurrentDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue> where TKey : notnull {
     readonly ConcurrentDictionary<TKey, TValue> _underlyingDict;
 
     public ReadOnlyConcurrentDictionary(ConcurrentDictionary<TKey, TValue> underlyingDict) => _underlyingDict = underlyingDict;
@@ -21,7 +21,7 @@ internal readonly struct ReadOnlyConcurrentDictionary<TKey, TValue> : IReadOnlyD
     public bool ContainsKey(TKey key) => _underlyingDict.ContainsKey(key);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetValue(TKey key, out TValue value) => _underlyingDict.TryGetValue(key, out value);
+    public bool TryGetValue(TKey key, out TValue value) => _underlyingDict.TryGetValue(key, out value!);
 
     public TValue this[TKey key] => _underlyingDict[key];
 

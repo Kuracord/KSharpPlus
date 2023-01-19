@@ -24,7 +24,7 @@ internal sealed class RestUserUpdatePayload {
     
     [JsonProperty("username")] public string Username { get; set; }
     
-    [JsonProperty("discriminator")] public string Discriminator { get; set; }
+    [JsonProperty("discriminator")] public string Discriminator { get; set; } = null!;
     
     //todo: file
 }

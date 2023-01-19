@@ -1,6 +1,5 @@
 ﻿using KSharpPlus.Entities.User;
 using KSharpPlus.Enums;
-using KSharpPlus.Net.Abstractions.Transport;
 using Newtonsoft.Json;
 
 namespace KSharpPlus.Entities.Guild; 
@@ -18,7 +17,7 @@ public class KuracordMember : SnowflakeObject, IEquatable<KuracordMember> {
         Kuracord = user.Kuracord;
     }
 
-    internal KuracordMember(TransportMember member) {
+    internal KuracordMember(KuracordMember member) {
         Id = member.User.Id;
         Nickname = member.Nickname;
         JoinedAt = member.JoinedAt;
@@ -62,7 +61,7 @@ public class KuracordMember : SnowflakeObject, IEquatable<KuracordMember> {
     /// <summary>
     /// Gets the user associated with this member.
     /// </summary>
-    [JsonProperty("user")] public KuracordUser User { get; internal set; }
+    [JsonProperty("user")] public KuracordUser User { get; internal set; } = null!;
 
     /// <summary>
     /// Gets whether this member is the Guild owner.
@@ -83,6 +82,15 @@ public class KuracordMember : SnowflakeObject, IEquatable<KuracordMember> {
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
     /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
     public Task<KuracordMember> ModifyAsync(string? nickname) => Kuracord!.ApiClient.ModifyMemberAsync(_guildId, Id, nickname);
+    
+    /// <summary>
+    /// Kicks this member from their guild.
+    /// </summary>
+    /// <exception cref="Exceptions.UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.KickMembers"/> permission.</exception>
+    /// <exception cref="Exceptions.NotFoundException">Thrown when the member does not exist.</exception>
+    /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
+    /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task RemoveAsync() => Kuracord!.ApiClient.DeleteMemberAsync(_guildId, Id);
 
     #endregion
     
@@ -137,7 +145,7 @@ public class KuracordMember : SnowflakeObject, IEquatable<KuracordMember> {
 
         if (o1 == null && o2 != null || o1 != null && o2 == null) return false;
 
-        return o1 == null && o2 == null || e1?.Id == e2?.Id && e1._guildId == e2._guildId;
+        return o1 == null && o2 == null || e1?.Id == e2?.Id && e1?._guildId == e2?._guildId;
     }
 
     /// <summary>

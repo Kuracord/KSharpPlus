@@ -20,6 +20,6 @@ public class ChannelCreateEventArgs : KuracordEventArgs {
 
     internal ChannelCreateEventArgs(KuracordChannel channel) {
         Channel = channel;
-        Guild = channel.Guild;
+        Guild = channel.Guild!;
     }
 }

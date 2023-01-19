@@ -7,11 +7,11 @@ using Newtonsoft.Json.Serialization;
 namespace KSharpPlus.Entities;
 
 /// <summary>
-/// Helper methods for instantiating an <see cref="Optional{T}" />.
+/// Helper methods for instantiating an <see cref="Optional{T}"/>.
 /// </summary>
 /// <remarks>
-/// This class only serves to allow type parameter inference on calls to <see cref="FromValue{T}" /> or
-/// <see cref="FromNoValue{T}" />.
+/// This class only serves to allow type parameter inference on calls to <see cref="FromValue{T}"/> or
+/// <see cref="FromNoValue{T}"/>.
 /// </remarks>
 public static class Optional {
     /// <summary>
@@ -52,7 +52,7 @@ public readonly struct Optional<T> : IEquatable<Optional<T>>, IEquatable<T>, IOp
     /// </summary>
     /// <exception cref="InvalidOperationException">If this <see cref="Optional{T}" /> has no value.</exception>
     public T Value => HasValue ? _val : throw new InvalidOperationException("Value is not set.");
-    object IOptional.RawValue => _val;
+    object IOptional.RawValue => _val!;
 
     readonly T _val;
 
@@ -76,7 +76,7 @@ public readonly struct Optional<T> : IEquatable<Optional<T>>, IEquatable<T>, IOp
     /// Returns a string representation of this optional value.
     /// </summary>
     /// <returns>String representation of this optional value.</returns>
-    public override string ToString() => $"Optional<{typeof(T)}> ({(HasValue ? Value.ToString() : "<no value>")})";
+    public override string ToString() => $"Optional<{typeof(T)}> ({(HasValue ? Value!.ToString() : "<no value>")})";
 
     /// <summary>
     /// Checks whether this <see cref="Optional{T}" /> (or its value) are equal to another object.
@@ -94,20 +94,20 @@ public readonly struct Optional<T> : IEquatable<Optional<T>>, IEquatable<T>, IOp
     /// </summary>
     /// <param name="e"><see cref="Optional{T}" /> to compare to.</param>
     /// <returns>Whether the <see cref="Optional{T}" /> is equal to this <see cref="Optional{T}" />.</returns>
-    public bool Equals(Optional<T> e) => !HasValue && !e.HasValue || HasValue == e.HasValue && Value.Equals(e.Value);
+    public bool Equals(Optional<T> e) => !HasValue && !e.HasValue || HasValue == e.HasValue && Value!.Equals(e.Value);
 
     /// <summary>
     /// Checks whether the value of this <see cref="Optional{T}" /> is equal to specified object.
     /// </summary>
     /// <param name="e">Object to compare to.</param>
     /// <returns>Whether the object is equal to the value of this <see cref="Optional{T}" />.</returns>
-    public bool Equals(T e) => HasValue && ReferenceEquals(Value, e);
+    public bool Equals(T? e) => HasValue && ReferenceEquals(Value, e);
 
     /// <summary>
     /// Gets the hash code for this <see cref="Optional{T}" />.
     /// </summary>
     /// <returns>The hash code for this <see cref="Optional{T}" />.</returns>
-    public override int GetHashCode() => HasValue ? Value.GetHashCode() : 0;
+    public override int GetHashCode() => HasValue ? Value!.GetHashCode() : 0;
 
     public static implicit operator Optional<T>(T val) => new(val);
 
@@ -154,7 +154,7 @@ internal sealed class OptionalJsonContractResolver : DefaultContractResolver {
             case PropertyInfo declaringProp:
                 property.ShouldSerialize = instance => { // instance here is the declaring (parent) type
                     object? optionalValue = declaringProp.GetValue(instance);
-                    return (optionalValue as IOptional).HasValue;
+                    return (optionalValue as IOptional)!.HasValue;
                 };
 
                 return property;
@@ -162,7 +162,7 @@ internal sealed class OptionalJsonContractResolver : DefaultContractResolver {
             case FieldInfo declaringField:
                 property.ShouldSerialize = instance => { // instance here is the declaring (parent) type
                     object? optionalValue = declaringField.GetValue(instance);
-                    return (optionalValue as IOptional).HasValue;
+                    return (optionalValue as IOptional)!.HasValue;
                 };
 
                 return property;
@@ -176,10 +176,10 @@ internal sealed class OptionalJsonContractResolver : DefaultContractResolver {
 internal sealed class OptionalJsonConverter : JsonConverter {
     public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer) {
         // we don't check for HasValue here since it's checked in OptionalJsonContractResolver
-        object? val = (value as IOptional).RawValue;
+        object? val = (value as IOptional)!.RawValue;
 
         // JToken.FromObject will throw if `null` so we manually write a null value.
-        if (val == null) {
+        if (val == null!) {
             // you can read serializer.NullValueHandling here, but unfortunately you can **not** skip serialization
             // here, or else you will get a nasty JsonWriterException, so we just ignore its value and manually
             // write the null.

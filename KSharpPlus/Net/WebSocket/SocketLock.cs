@@ -1,22 +1,19 @@
 ﻿namespace KSharpPlus.Net.WebSocket; 
 
 internal sealed class SocketLock : IDisposable {
-    public SocketLock(ulong appId, int maxConcurrency) {
-        ApplicationId = appId;
+    public SocketLock(int maxConcurrency) {
         TimeoutCancelSource = null!;
         MaxConcurrency = maxConcurrency;
         LockSemaphore = new SemaphoreSlim(maxConcurrency);
     }
     
     #region Fields and Properties
-
-    public ulong ApplicationId { get; }
-
+    
     SemaphoreSlim LockSemaphore { get; }
     CancellationTokenSource? TimeoutCancelSource { get; set; }
-    CancellationToken TimeoutCancel => TimeoutCancelSource.Token;
-    Task UnlockTask { get; set; }
-    int MaxConcurrency { get; set; }
+    CancellationToken TimeoutCancel => TimeoutCancelSource!.Token;
+    Task UnlockTask { get; set; } = null!;
+    int MaxConcurrency { get; }
 
     #endregion
 
@@ -26,7 +23,7 @@ internal sealed class SocketLock : IDisposable {
         await LockSemaphore.WaitAsync().ConfigureAwait(false);
 
         TimeoutCancelSource = new CancellationTokenSource();
-        UnlockTask = Task.Delay(TimeSpan.FromSeconds(30), TimeoutCancel);
+        UnlockTask = Task.Delay(TimeSpan.FromSeconds(30), TimeoutCancel); 
         UnlockTask.ContinueWith(InternalUnlock, TaskContinuationOptions.NotOnCanceled);
     }
 
@@ -55,8 +52,8 @@ internal sealed class SocketLock : IDisposable {
 
     public void Dispose() {
         try {
-            TimeoutCancelSource.Cancel();
-            TimeoutCancelSource.Dispose();
+            TimeoutCancelSource?.Cancel();
+            TimeoutCancelSource?.Dispose();
         } catch {/**/}
     }
 

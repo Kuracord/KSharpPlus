@@ -10,12 +10,12 @@ public class BadRequestException : KuracordException {
     /// <summary>
     /// Gets the error code for this exception.
     /// </summary>
-    public int Code { get; internal set; }
+    public int Code { get; }
 
     /// <summary>
     /// Gets the form error responses in JSON format.
     /// </summary>
-    public string Errors { get; internal set; }
+    public string Errors { get; } = null!;
 
     internal BadRequestException(BaseRestRequest request, RestResponse response) : base($"Bad request: {response.ResponseCode}; {JObject.Parse(response.Response)["message"]}") {
         WebRequest = request;

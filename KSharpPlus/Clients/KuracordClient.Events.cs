@@ -49,8 +49,8 @@ public sealed partial class KuracordClient {
     /// Fired when this client has successfully completed its handshake with the websocket gateway.
     /// </summary>
     /// <remarks>
-    /// <i><see cref="Guilds" /> will not be populated when this event is fired.</i><br />
-    /// See also: <see cref="GuildAvailable" />, <see cref="GuildDownloadCompleted" />
+    /// <i><see cref="Guilds"/> will not be populated when this event is fired.</i><br/>
+    /// See also: <see cref="GuildAvailable"/>, <see cref="GuildDownloadCompleted"/>
     /// </remarks>
     public event AsyncEventHandler<KuracordClient, ReadyEventArgs> Ready {
         add => _ready.Register(value);
@@ -96,7 +96,6 @@ public sealed partial class KuracordClient {
     /// <summary>
     /// Fired when the user joins a new guild.
     /// </summary>
-    /// <remarks>[alias="GuildJoined"][alias="JoinedGuild"]</remarks>
     public event AsyncEventHandler<KuracordClient, GuildCreateEventArgs> GuildCreated {
         add => _guildCreated.Register(value);
         remove => _guildCreated.Unregister(value);
@@ -125,6 +124,16 @@ public sealed partial class KuracordClient {
     AsyncEvent<KuracordClient, GuildUpdateEventArgs> _guildUpdated;
     
     /// <summary>
+    /// Fired when the guild was deleted.
+    /// </summary>
+    public event AsyncEventHandler<KuracordClient, GuildDeleteEventArgs> GuildDeleted {
+        add => _guildDeleted.Register(value);
+        remove => _guildDeleted.Unregister(value);
+    }
+
+    AsyncEvent<KuracordClient, GuildDeleteEventArgs> _guildDeleted;
+    
+    /// <summary>
     /// Fired when all guilds finish streaming from Kuracord.
     /// </summary>
     public event AsyncEventHandler<KuracordClient, GuildDownloadCompletedEventArgs> GuildDownloadCompleted {
@@ -147,6 +156,26 @@ public sealed partial class KuracordClient {
     }
 
     AsyncEvent<KuracordClient, ChannelCreateEventArgs> _channelCreated;
+    
+    /// <summary>
+    /// Fired when a channel is updated.
+    /// </summary>
+    public event AsyncEventHandler<KuracordClient, ChannelUpdateEventArgs> ChannelUpdated {
+        add => _channelUpdated.Register(value);
+        remove => _channelUpdated.Unregister(value);
+    }
+
+    AsyncEvent<KuracordClient, ChannelUpdateEventArgs> _channelUpdated;
+    
+    /// <summary>
+    /// Fired when a channel is deleted.
+    /// </summary>
+    public event AsyncEventHandler<KuracordClient, ChannelDeleteEventArgs> ChannelDeleted {
+        add => _channelDeleted.Register(value);
+        remove => _channelDeleted.Unregister(value);
+    }
+
+    AsyncEvent<KuracordClient, ChannelDeleteEventArgs> _channelDeleted;
 
     #endregion
 
@@ -195,6 +224,16 @@ public sealed partial class KuracordClient {
     }
 
     AsyncEvent<KuracordClient, MemberJoinedEventArgs> _memberJoined;
+    
+    /// <summary>
+    /// Fired when a user is removed from a guild (leave/kick/ban).
+    /// </summary>
+    public event AsyncEventHandler<KuracordClient, MemberLeaveEventArgs> MemberLeave {
+        add => _memberLeave.Register(value);
+        remove => _memberLeave.Unregister(value);
+    }
+
+    AsyncEvent<KuracordClient, MemberLeaveEventArgs> _memberLeave;
     
     /// <summary>
     /// Fired when a guild member is updated.

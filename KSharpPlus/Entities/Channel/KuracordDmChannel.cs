@@ -8,5 +8,5 @@ public class KuracordDmChannel : KuracordChannel {
     /// Gets the recipients of this direct message.
     /// </summary>
     [JsonProperty("recipients", NullValueHandling = NullValueHandling.Ignore)]
-    public IReadOnlyList<KuracordUser> Recipients { get; internal set; }
+    public IReadOnlyList<KuracordUser> Recipients { get; internal set; } = null!;
 }

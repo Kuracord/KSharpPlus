@@ -17,17 +17,17 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     /// <summary>
     /// Gets the guild's name.
     /// </summary>
-    [JsonProperty("name")] public string Name { get; internal set; }
+    [JsonProperty("name")] public string Name { get; internal set; } = null!;
 
     /// <summary>
     /// Gets the guild's short name.
     /// </summary>
-    [JsonProperty("shortName")] public string ShortName { get; internal set; }
+    [JsonProperty("shortName")] public string ShortName { get; internal set; } = null!;
     
     /// <summary>
     /// Gets the guild's vanity invite code.
     /// </summary>
-    [JsonProperty("vanityUrl")] public string VanityCode { get; internal set; }
+    [JsonProperty("vanityUrl")] public string VanityCode { get; internal set; } = null!;
 
     /// <summary>
     /// Gets the guild icon's url.
@@ -47,7 +47,7 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     /// <summary>
     /// Gets the guild's owner.
     /// </summary>
-    [JsonProperty("owner")] public KuracordUser Owner { get; internal set; }
+    [JsonProperty("owner")] public KuracordUser Owner { get; internal set; } = null!;
     
     /// <summary>
     /// Gets the guild's description.
@@ -58,7 +58,7 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     /// Gets the guild icon's hash.
     /// </summary>
     [JsonProperty("icon", NullValueHandling = NullValueHandling.Ignore)]
-    public string IconHash { get; internal set; }
+    public string IconHash { get; internal set; } = null!;
 
     /// <summary>
     /// Gets a dictionary of all the channels associated with this guild. The dictionary's key is the channel ID.
@@ -130,6 +130,14 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
     /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
     public Task<KuracordGuild> ModifyAsync(string name) => Kuracord!.ApiClient.ModifyGuildAsync(Id, name);
+    
+    /// <summary>
+    /// Deletes this guild. Requires the caller to be the owner of the guild.
+    /// </summary>
+    /// <param name="password">Your account password.</param>
+    /// <exception cref="UnauthorizedException">Thrown when the client is not the owner of the guild.</exception>
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task DeleteAsync(string password) => Kuracord!.ApiClient.DeleteGuildAsync(Id, password);
 
     /// <summary>
     /// Creates a new text channel in this guild.
@@ -169,7 +177,7 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
     /// <exception cref="KeyNotFoundException">Thrown when the channel does not found.</exception>
     public async Task<KuracordChannel> GetChannelAsync(ulong channelId) => 
-        Channels.TryGetValue(channelId, out KuracordChannel? channel) && channel != null
+        Channels.TryGetValue(channelId, out KuracordChannel? channel) && channel != null!
             ? channel
             : await Kuracord!.ApiClient.GetChannelAsync(Id, channelId).ConfigureAwait(false);
     
@@ -224,6 +232,26 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
     /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
     public Task<KuracordMember> ModifyMemberAsync(ulong memberId, string? nickname) => Kuracord!.ApiClient.ModifyMemberAsync(Id, memberId, nickname);
+    
+    /// <summary>
+    /// Kicks the member from this guild.
+    /// </summary>
+    /// <param name="member">The member to kick.</param>
+    /// <exception cref="Exceptions.UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.KickMembers"/> permission.</exception>
+    /// <exception cref="Exceptions.NotFoundException">Thrown when the member does not exist.</exception>
+    /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
+    /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task RemoveMemberAsync(KuracordMember member) => RemoveMemberAsync(member.Id);
+    
+    /// <summary>
+    /// Kicks the member from this guild.
+    /// </summary>
+    /// <param name="memberId">ID of the member to kick.</param>
+    /// <exception cref="Exceptions.UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.KickMembers"/> permission.</exception>
+    /// <exception cref="Exceptions.NotFoundException">Thrown when the member does not exist.</exception>
+    /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
+    /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task RemoveMemberAsync(ulong memberId) => Kuracord!.ApiClient.DeleteMemberAsync(Id, memberId);
 
     /// <summary>
     /// Gets a role from this guild by its ID.
@@ -254,7 +282,7 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     /// <exception cref="Exceptions.NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
     /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
-    public Task<KuracordMessage> SendMessageAsync(ulong channelId, string content) => Kuracord!.ApiClient.CreateMessageAsync(channelId, content);
+    public Task<KuracordMessage> SendMessageAsync(ulong channelId, string content) => Kuracord!.ApiClient.CreateMessageAsync(Id, channelId, content);
 
     #endregion
     

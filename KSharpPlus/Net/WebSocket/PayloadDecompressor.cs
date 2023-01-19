@@ -1,6 +1,5 @@
 ﻿using System.Buffers.Binary;
 using System.IO.Compression;
-using KSharpPlus.Enums;
 
 namespace KSharpPlus.Net.WebSocket; 
 
@@ -8,23 +7,16 @@ internal sealed class PayloadDecompressor : IDisposable {
     const uint ZlibFlush = 0x0000FFFF;
     const byte ZlibPrefix = 0x78;
 
-    public GatewayCompressionLevel CompressionLevel { get; }
-
     MemoryStream CompressedStream { get; }
     DeflateStream? DecompressorStream { get; }
     
-    public PayloadDecompressor(GatewayCompressionLevel compressionLevel) {
-        if (compressionLevel == GatewayCompressionLevel.None) throw new InvalidOperationException("Decompressor requires a valid compression mode.");
-
-        CompressionLevel = compressionLevel;
+    public PayloadDecompressor() {
         CompressedStream = new MemoryStream();
-        if (CompressionLevel == GatewayCompressionLevel.Stream) DecompressorStream = new DeflateStream(CompressedStream, CompressionMode.Decompress);
+        DecompressorStream = new DeflateStream(CompressedStream, CompressionMode.Decompress);
     }
 
     public bool TryDecompress(ArraySegment<byte> compressed, MemoryStream decompressed) {
-        DeflateStream zlib = CompressionLevel == GatewayCompressionLevel.Stream 
-            ? DecompressorStream!
-            : new DeflateStream(CompressedStream, CompressionMode.Decompress, true);
+        DeflateStream zlib = DecompressorStream!;
 
         if (compressed.Array?[0] == ZlibPrefix)
             CompressedStream.Write(compressed.Array, compressed.Offset + 2, compressed.Count - 2);
@@ -36,10 +28,7 @@ internal sealed class PayloadDecompressor : IDisposable {
 
         Span<byte> compressedSpan = compressed.AsSpan();
         uint suffix = BinaryPrimitives.ReadUInt32BigEndian(compressedSpan[^4..]);
-        if (CompressionLevel == GatewayCompressionLevel.Stream && suffix != ZlibFlush) {
-            if (CompressionLevel == GatewayCompressionLevel.Payload) zlib.Dispose();
-            return false;
-        }
+        if (suffix != ZlibFlush) return false;
 
         try {
             zlib.CopyTo(decompressed);
@@ -49,8 +38,6 @@ internal sealed class PayloadDecompressor : IDisposable {
         } finally {
             CompressedStream.Position = 0;
             CompressedStream.SetLength(0);
-
-            if (CompressionLevel == GatewayCompressionLevel.Payload) zlib.Dispose();
         }
     }
     

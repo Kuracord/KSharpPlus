@@ -48,7 +48,7 @@ public class KuracordMessage : SnowflakeObject, IEquatable<KuracordMessage> {
         } 
     }
     
-    [JsonProperty("guild")] internal KuracordGuild _guild { get; set; }
+    [JsonProperty("guild")] internal KuracordGuild _guild { get; set; } = null!;
 
     /// <summary>
     /// Gets the channel in which the message was sent.
@@ -61,12 +61,12 @@ public class KuracordMessage : SnowflakeObject, IEquatable<KuracordMessage> {
         }
     }
      
-    [JsonProperty("channel")] internal KuracordChannel _channel { get; set; }
+    [JsonProperty("channel")] internal KuracordChannel _channel { get; set; } = null!;
 
     /// <summary>
     /// Gets the user that sent the message.
     /// </summary>
-    [JsonProperty("author")] public KuracordUser Author { get; internal set; }
+    [JsonProperty("author")] public KuracordUser Author { get; internal set; } = null!;
     
     /// <summary>
     /// Gets the member that sent the message.
@@ -79,7 +79,7 @@ public class KuracordMessage : SnowflakeObject, IEquatable<KuracordMessage> {
         }
     }
 
-    [JsonProperty("member")] internal KuracordMember _member { get; set; }
+    [JsonProperty("member")] internal KuracordMember _member { get; set; } = null!;
 
     /// <summary>
     /// Gets the ID of the channel in which the message was sent.
@@ -89,7 +89,7 @@ public class KuracordMessage : SnowflakeObject, IEquatable<KuracordMessage> {
     /// <summary>
     /// Gets the message's content.
     /// </summary>
-    [JsonProperty("content")] public string Content { get; internal set; }
+    [JsonProperty("content")] public string Content { get; internal set; } = null!;
     
     /// <summary>
     /// Gets the message's edit timestamp. Will be null if the message was not edited.
@@ -124,8 +124,8 @@ public class KuracordMessage : SnowflakeObject, IEquatable<KuracordMessage> {
     /// <exception cref="Exceptions.UnauthorizedException">Thrown when the client tried to modify a message not sent by them.</exception>
     /// <exception cref="Exceptions.NotFoundException">Thrown when the member does not exist.</exception>
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="Exceptions.ServerErrorException">Thrown when Discord is unable to process the request.</exception>
-    public Task<KuracordMessage> ModifyAsync(string content) => Kuracord!.ApiClient.EditMessageAsync(ChannelId, Id, content);
+    /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task<KuracordMessage> ModifyAsync(string content) => Kuracord!.ApiClient.EditMessageAsync(Guild.Id, ChannelId, Id, content);
 
     /// <summary>
     /// Deletes a message.
@@ -133,8 +133,8 @@ public class KuracordMessage : SnowflakeObject, IEquatable<KuracordMessage> {
     /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.Administrator"/> permission.</exception>
     /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
-    /// <exception cref="ServerErrorException">Thrown when Discord is unable to process the request.</exception>
-    public Task DeleteAsync() => Kuracord!.ApiClient.DeleteMessageAsync(ChannelId, Id);
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task DeleteAsync() => Kuracord!.ApiClient.DeleteMessageAsync(Guild.Id, ChannelId, Id);
 
     #endregion
     
@@ -190,7 +190,7 @@ public class KuracordMessage : SnowflakeObject, IEquatable<KuracordMessage> {
         if (o1 == null && o2 != null || o1 != null && o2 == null)
             return false;
 
-        return o1 == null && o2 == null || e1?.Id == e2?.Id && e1.ChannelId == e2.ChannelId;
+        return o1 == null && o2 == null || e1?.Id == e2?.Id && e1?.ChannelId == e2?.ChannelId;
     }
 
     /// <summary>

@@ -1,7 +1,6 @@
 ﻿using KSharpPlus.Clients;
 using KSharpPlus.Entities.Guild;
 using KSharpPlus.Enums.User;
-using KSharpPlus.Net.Abstractions.Transport;
 using Newtonsoft.Json;
 
 namespace KSharpPlus.Entities.User; 
@@ -11,7 +10,7 @@ public class KuracordUser : SnowflakeObject, IEquatable<KuracordUser> {
 
     internal KuracordUser() { }
 
-    internal KuracordUser(TransportUser transport) {
+    internal KuracordUser(KuracordUser transport) {
         Id = transport.Id;
         Username = transport.Username;
         Discriminator = transport.Discriminator;
@@ -34,72 +33,72 @@ public class KuracordUser : SnowflakeObject, IEquatable<KuracordUser> {
     /// Gets this user's username.
     /// </summary>
     [JsonProperty("username", NullValueHandling = NullValueHandling.Ignore)]
-    public virtual string Username { get; internal set; }
+    public string Username { get; internal set; } = null!;
 
     /// <summary>
     /// Gets the user's 4-digit discriminator.
     /// </summary>
     [JsonProperty("discriminator", NullValueHandling = NullValueHandling.Ignore)]
-    public virtual string Discriminator { get; internal set; }
+    public string Discriminator { get; internal set; } = null!;
     
     /// <summary>
     /// Gets the user's token. This field will not be null only if the user was get from
     /// <see cref="KuracordClient.RegisterUserAsync"/> method. 
     /// </summary>
-    [JsonIgnore] public virtual string? Token { get; internal set; }
+    [JsonIgnore] public string? Token { get; internal set; }
     
     /// <summary>
     /// Gets the user's biography.
     /// </summary>
     [JsonProperty("bio", NullValueHandling = NullValueHandling.Ignore)]
-    public virtual string Biography { get; internal set; }
+    public string Biography { get; internal set; } = null!;
 
     /// <summary>
     /// Gets the user's avatar URL.
     /// </summary>
-    [JsonIgnore] public virtual string AvatarUrl { get; internal set; }
+    [JsonIgnore] public string AvatarUrl { get; internal set; } = null!;
 
     /// <summary>
     /// Gets whether the user is a bot.
     /// </summary>
     [JsonProperty("bot", NullValueHandling = NullValueHandling.Ignore)]
-    public virtual bool IsBot { get; internal set; }
+    public bool IsBot { get; internal set; }
     
     /// <summary>
     /// Gets whether the user is disabled. Only for the current user.
     /// </summary>
     [JsonProperty("disabled", NullValueHandling = NullValueHandling.Ignore)]
-    public virtual bool? Disabled { get; internal set; }
+    public bool? Disabled { get; internal set; }
 
     /// <summary>
     /// Gets whether the user is verified. Only for the current user.
     /// </summary>
     [JsonProperty("verified", NullValueHandling = NullValueHandling.Ignore)]
-    public virtual bool? Verified { get; internal set; }
+    public bool? Verified { get; internal set; }
 
     /// <summary>
     /// Gets the user's email address. Only for the current user.
     /// </summary>
     [JsonProperty("email", NullValueHandling = NullValueHandling.Ignore)]
-    public virtual string? Email { get; internal set; }
+    public string? Email { get; internal set; }
 
     /// <summary>
     /// Gets the user's premium type. Only for the current user.
     /// </summary>
     [JsonProperty("premiumType", NullValueHandling = NullValueHandling.Ignore)]
-    public virtual PremiumType? PremiumType { get; internal set; }
+    public PremiumType? PremiumType { get; internal set; }
 
     /// <summary>
     /// Gets the user's flags.
     /// </summary>
     [JsonProperty("flags", NullValueHandling = NullValueHandling.Ignore)]
-    public virtual UserFlags? Flags { get; internal set; }
+    public UserFlags? Flags { get; internal set; }
     
     /// <summary>
     /// Gets user's guilds. Only for the current user.
     /// </summary>
     [JsonProperty("guilds", NullValueHandling = NullValueHandling.Ignore)]
-    public virtual IReadOnlyList<KuracordMember>? GuildsMember { get; internal set; }
+    public IReadOnlyList<KuracordMember>? GuildsMember { get; internal set; }
 
     /// <summary>
     /// Gets the user's mention string.

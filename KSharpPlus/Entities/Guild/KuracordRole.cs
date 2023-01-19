@@ -11,8 +11,8 @@ public class KuracordRole : SnowflakeObject, IEquatable<KuracordRole> {
     /// Gets the name of this role.
     /// </summary>
     [JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
-    public string Name { get; internal set; }
-
+    public string Name { get; internal set; } = null!;
+    
     /// <summary>
     /// Gets the color of this role.
     /// </summary>
@@ -33,7 +33,7 @@ public class KuracordRole : SnowflakeObject, IEquatable<KuracordRole> {
     [JsonProperty("permissions", NullValueHandling = NullValueHandling.Ignore)]
     public Permissions Permissions { get; internal set; }
     
-    [JsonIgnore] internal ulong _guild_id;
+    [JsonIgnore] internal ulong _guildId;
     
     /// <summary>
     /// Gets a mention string for this role. If the role is mentionable, this string will mention all the users that belong to this role.

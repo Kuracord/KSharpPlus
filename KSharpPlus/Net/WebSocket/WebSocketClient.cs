@@ -15,7 +15,7 @@ public class WebSocketClient : IWebSocketClient {
     public IReadOnlyDictionary<string, string> DefaultHeaders { get; }
     readonly Dictionary<string, string>? _defaultHeaders;
 
-    Task _receiverTask;
+    Task _receiverTask = null!;
     CancellationTokenSource? _receiverTokenSource;
     CancellationToken _receiverToken;
     readonly SemaphoreSlim _senderLock;
@@ -92,7 +92,7 @@ public class WebSocketClient : IWebSocketClient {
             _isClientClose = true;
 
             if (_ws is { State: WebSocketState.Open or WebSocketState.CloseReceived }) await _ws.CloseOutputAsync((WebSocketCloseStatus)code, message, CancellationToken.None).ConfigureAwait(false);
-            if (_receiverTask != null) await _receiverTask.ConfigureAwait(false); // Ensure that receiving completed
+            if (_receiverTask != null!) await _receiverTask.ConfigureAwait(false); // Ensure that receiving completed
             if (_isConnected) _isConnected = false;
 
             if (!_isDisposed) {
@@ -131,11 +131,11 @@ public class WebSocketClient : IWebSocketClient {
     }
 
     public bool AddDefaultHeader(string name, string value) {
-        _defaultHeaders[name] = value;
+        _defaultHeaders![name] = value;
         return true;
     }
 
-    public bool RemoveDefaultHeader(string name) => _defaultHeaders.Remove(name);
+    public bool RemoveDefaultHeader(string name) => _defaultHeaders!.Remove(name);
 
     /// <summary>
     /// Disposes of resources used by this WebSocket client instance.
@@ -166,16 +166,16 @@ public class WebSocketClient : IWebSocketClient {
                 WebSocketReceiveResult result;
 
                 do {
-                    result = await _ws.ReceiveAsync(buffer, CancellationToken.None).ConfigureAwait(false);
+                    result = await _ws!.ReceiveAsync(buffer, CancellationToken.None).ConfigureAwait(false);
 
                     if (result.MessageType == WebSocketMessageType.Close) break;
 
-                    bs.Write(buffer.Array, 0, result.Count);
+                    bs.Write(buffer.Array!, 0, result.Count);
                 } while (!result.EndOfMessage);
 
                 byte[] resultBytes = new byte[bs.Length];
                 bs.Position = 0;
-                bs.Read(resultBytes, 0, resultBytes.Length);
+                await bs.ReadAsync(resultBytes);
                 bs.Position = 0;
                 bs.SetLength(0);
 
@@ -190,7 +190,7 @@ public class WebSocketClient : IWebSocketClient {
                     await _messageReceived.InvokeAsync(this, new SocketTextMessageEventArgs(Utilities.UTF8.GetString(resultBytes))).ConfigureAwait(false);
                 } else {
                     if (!_isClientClose) {
-                        WebSocketCloseStatus code = result.CloseStatus.Value;
+                        WebSocketCloseStatus code = result.CloseStatus!.Value;
 
                         code = code is WebSocketCloseStatus.NormalClosure or WebSocketCloseStatus.EndpointUnavailable
                             ? (WebSocketCloseStatus)4000
@@ -211,7 +211,7 @@ public class WebSocketClient : IWebSocketClient {
 
         // Don't await or you deadlock
         // DisconnectAsync waits for this method
-        DisconnectAsync().ConfigureAwait(false);
+        await DisconnectAsync().ConfigureAwait(false);
     }
 
     /// <summary>

@@ -10,5 +10,5 @@ internal sealed class GatewayIdentify {
     /// Gets or sets the token used to identify the client to Kuracord.
     /// </summary>
     [JsonProperty("token")]
-    public string Token { get; set; }
+    public string Token { get; set; } = null!;
 }

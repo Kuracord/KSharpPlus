@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 namespace KSharpPlus.Logging;
 
 public class DefaultLogger : ILogger<BaseKuracordClient> {
-    static readonly object _lock = new();
+    static readonly object Lock = new();
     LogLevel MinimumLevel { get; }
     string TimestampFormat { get; }
 
@@ -15,12 +15,12 @@ public class DefaultLogger : ILogger<BaseKuracordClient> {
         TimestampFormat = timestampFormat;
     }
 
-    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter) {
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) {
         if (!IsEnabled(logLevel)) return;
 
-        lock (_lock) {
+        lock (Lock) {
             string? eventName = eventId.Name;
-            eventName = eventName?.Length > 12 ? eventName?.Substring(0, 12) : eventName;
+            eventName = eventName?.Length > 12 ? eventName[..12] : eventName;
             Console.Write($"[{DateTimeOffset.Now.ToString(TimestampFormat)}] [{eventId.Id,-4}/{eventName,-12}] ");
 
             switch (logLevel) {
@@ -53,11 +53,11 @@ public class DefaultLogger : ILogger<BaseKuracordClient> {
             Console.Write(logLevel switch {
                 LogLevel.Trace => "[Trace] ",
                 LogLevel.Debug => "[Debug] ",
-                LogLevel.Information => "[Info ] ",
-                LogLevel.Warning => "[Warn ] ",
+                LogLevel.Information => "[Info] ",
+                LogLevel.Warning => "[Warn] ",
                 LogLevel.Error => "[Error] ",
-                LogLevel.Critical => "[Crit ]",
-                LogLevel.None => "[None ] ",
+                LogLevel.Critical => "[Crit]",
+                LogLevel.None => "[None] ",
                 _ => "[?????] "
             });
 
