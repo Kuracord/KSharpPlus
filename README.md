@@ -27,4 +27,14 @@ You can install the library from following sources:
     This belongs in the ItemGroup tag with the rest of your dependencies. The library should not be in the same directory or subdirectory as your project.
 
 # Documentation
-* TODO
+The documentation for the latest stable version is available at KSharpPlus.github.io.
+
+# Resources
+
+### Tutorials
+* [Making your first bot in C#](https://ksharpplus.github.io/articles/basics/bot_account.html).
+
+# Questions?
+Come talk to us here:
+
+[![KSharpPlus Chat](https://discord.com/api/guilds/848917384316059718/embed.png?style=banner1)](https://discord.gg/upvavwEnzy)

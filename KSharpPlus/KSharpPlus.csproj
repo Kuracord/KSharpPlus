@@ -10,13 +10,12 @@
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-        <DebugType>None</DebugType>
-        <DebugSymbols>false</DebugSymbols>
-
         <NuspecFile>KSharpPlus.nuspec</NuspecFile>
         <NuspecProperties>configuration=$(Configuration)</NuspecProperties>
         <NuspecProperties>version=$(Version)</NuspecProperties>
         <NuspecProperties>id=$(PackageId)</NuspecProperties>
+        
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
     <ItemGroup>
