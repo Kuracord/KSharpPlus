@@ -65,7 +65,7 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     /// </summary>
     [JsonIgnore] public IReadOnlyDictionary<ulong, KuracordChannel> Channels {
         get {
-            _channels ??= GetChannelsAsync().ConfigureAwait(false).GetAwaiter().GetResult().ToList();
+			if (_channels == null || !_channels.Any()) _channels = GetChannelsAsync().ConfigureAwait(false).GetAwaiter().GetResult().ToList();
             
             foreach (KuracordChannel channel in _channels.Where(m => m.Kuracord == null)) channel.Kuracord = Kuracord;
             
@@ -81,7 +81,7 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     /// </summary>
     [JsonIgnore] public IReadOnlyDictionary<ulong, KuracordMember> Members {
         get {
-            _members ??= GetMembersAsync().ConfigureAwait(false).GetAwaiter().GetResult().ToList();
+            if (_members == null || !_members.Any()) _members = GetMembersAsync().ConfigureAwait(false).GetAwaiter().GetResult().ToList();
 
             foreach (KuracordMember member in _members.Where(m => m.Kuracord == null)) member.Kuracord = Kuracord;
 
@@ -97,7 +97,7 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     /// </summary>
     [JsonIgnore] public IReadOnlyDictionary<ulong, KuracordRole> Roles {
         get {
-            _roles ??= new List<KuracordRole>();
+            if (_roles == null || !_members.Any()) _roles = new List<KuracordRole>();
 
             foreach (KuracordRole role in _roles.Where(r => r.Kuracord == null)) role.Kuracord = Kuracord;
 
