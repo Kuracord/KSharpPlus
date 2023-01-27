@@ -24,7 +24,7 @@ public class KuracordChannel : SnowflakeObject, IEquatable<KuracordChannel> {
     /// </summary>
     [JsonProperty("type", NullValueHandling = NullValueHandling.Ignore)]
     public ChannelType Type { get; internal set; }
-    
+
     /// <summary>
     /// Gets ID of the guild to which this channel belongs.
     /// </summary>
@@ -150,6 +150,20 @@ public class KuracordChannel : SnowflakeObject, IEquatable<KuracordChannel> {
         if (Type != ChannelType.Text) throw new ArgumentException($"Cannot get the messages of a {Type} channel.");
 
         return Kuracord!.ApiClient.GetMessagesAsync(Guild!.Id, Id);
+    }
+    
+    /// <summary>
+    /// Clones this channel. This operation will create a channel with identical settings to this one. Note that this will not copy messages.
+    /// </summary>
+    /// <returns>Newly-created channel.</returns>
+    /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.Administrator"/> permission.</exception>
+    /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
+    /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task<KuracordChannel> CloneAsync() {
+        if (Guild == null) throw new InvalidOperationException("Non-guild channels cannot be cloned.");
+
+        return Guild.CreateChannelAsync(Name, Type);
     }
     
     /// <summary>
