@@ -161,6 +161,12 @@ public sealed class KuracordApiClient {
         return DoRequestAsync(Kuracord, uri, RestRequestMethod.DELETE, null, KuracordJson.SerializeObject(payload));
     }
 
+    internal Task LeaveGuildAsync(ulong guildId) {
+        Uri uri = Utilities.GetApiUriFor($"{Endpoints.Guilds}/{guildId}{Endpoints.Members}/@me");
+
+        return DoRequestAsync(Kuracord, uri, RestRequestMethod.DELETE);
+    }
+
     #endregion
 
     #region Channel

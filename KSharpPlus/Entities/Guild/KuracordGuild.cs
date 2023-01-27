@@ -252,6 +252,12 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
     /// <exception cref="Exceptions.ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
     public Task RemoveMemberAsync(ulong memberId) => Kuracord!.ApiClient.DeleteMemberAsync(Id, memberId);
+    
+    /// <summary>
+    /// Leaves this guild.
+    /// </summary>
+    /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
+    public Task LeaveAsync() => Kuracord!.ApiClient.LeaveGuildAsync(Id);
 
     /// <summary>
     /// Gets a role from this guild by its ID.
