@@ -5,6 +5,7 @@ using KSharpPlus.EventArgs.Guild;
 using KSharpPlus.EventArgs.Guild.Member;
 using KSharpPlus.EventArgs.Message;
 using KSharpPlus.EventArgs.Socket;
+using KSharpPlus.EventArgs.User;
 using KSharpPlus.Logging;
 using Microsoft.Extensions.Logging;
 
@@ -244,6 +245,20 @@ public sealed partial class KuracordClient {
     }
 
     AsyncEvent<KuracordClient, MemberUpdatedEventArgs> _memberUpdated;
+
+    #endregion
+
+    #region User
+
+    /// <summary>
+    /// Fired when properties about the user change.
+    /// </summary>
+    public event AsyncEventHandler<KuracordClient, UserUpdateEventArgs> UserUpdated {
+        add => _userUpdated.Register(value);
+        remove => _userUpdated.Unregister(value);
+    }
+
+    AsyncEvent<KuracordClient, UserUpdateEventArgs> _userUpdated;
 
     #endregion
 

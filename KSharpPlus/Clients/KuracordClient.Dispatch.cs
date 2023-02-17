@@ -7,6 +7,7 @@ using KSharpPlus.EventArgs.Channel;
 using KSharpPlus.EventArgs.Guild;
 using KSharpPlus.EventArgs.Guild.Member;
 using KSharpPlus.EventArgs.Message;
+using KSharpPlus.EventArgs.User;
 using KSharpPlus.Logging;
 using KSharpPlus.Net.Abstractions.Gateway;
 using KSharpPlus.Net.Serialization;
@@ -111,6 +112,14 @@ public sealed partial class KuracordClient {
                 else member = _guilds[guildId].Members[memberId];
 
                 await OnMemberLeaveEventAsync(member, _guilds[guildId]).ConfigureAwait(false);
+                break;
+
+            #endregion
+
+            #region User
+
+            case "user_update":
+                await OnUserUpdateEventAsync(data["oldUser"]!.ToKuracordObject<KuracordUser>(), data["newUser"]!.ToKuracordObject<KuracordUser>()).ConfigureAwait(false);
                 break;
 
             #endregion
@@ -403,6 +412,33 @@ public sealed partial class KuracordClient {
         MemberLeaveEventArgs args = new(member, guild);
 
         await _memberLeave.InvokeAsync(this, args).ConfigureAwait(false);
+    }
+
+    #endregion
+
+    #region User
+
+    internal async Task OnUserUpdateEventAsync(KuracordUser oldUser, KuracordUser newUser) {
+        oldUser.Kuracord = newUser.Kuracord = this;
+        
+        if (newUser.IsCurrent) {
+            CurrentUser.AvatarUrl = newUser.AvatarUrl;
+            CurrentUser.Username = newUser.Username;
+            CurrentUser.Discriminator = newUser.Discriminator;
+            CurrentUser.Biography = newUser.Biography;
+            CurrentUser.Flags = newUser.Flags;
+            CurrentUser.Email = newUser.Email;
+            CurrentUser.IsBot = newUser.IsBot;
+            CurrentUser.Disabled = newUser.Disabled;
+            CurrentUser.Verified = newUser.Verified;
+            CurrentUser.PremiumType = newUser.PremiumType;
+            CurrentUser.Id = newUser.Id;
+        }
+
+        UpdateUserCache(newUser);
+
+        UserUpdateEventArgs args = new(oldUser, newUser);
+        await _userUpdated.InvokeAsync(this, args).ConfigureAwait(false);
     }
 
     #endregion

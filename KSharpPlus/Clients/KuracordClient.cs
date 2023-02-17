@@ -14,6 +14,7 @@ using KSharpPlus.EventArgs.Guild;
 using KSharpPlus.EventArgs.Guild.Member;
 using KSharpPlus.EventArgs.Message;
 using KSharpPlus.EventArgs.Socket;
+using KSharpPlus.EventArgs.User;
 using KSharpPlus.Exceptions;
 using KSharpPlus.Logging;
 using KSharpPlus.Net.Serialization;
@@ -69,6 +70,7 @@ public sealed partial class KuracordClient : BaseKuracordClient {
         _socketOpened = new AsyncEvent<KuracordClient, SocketEventArgs>("SOCKET_OPENED", EventExecutionLimit, EventErrorHandler);
         _socketClosed = new AsyncEvent<KuracordClient, SocketCloseEventArgs>("SOCKET_CLOSED", EventExecutionLimit, EventErrorHandler);
         _socketErrored = new AsyncEvent<KuracordClient, SocketErrorEventArgs>("SOCKET_ERRORED", EventExecutionLimit, Goof);
+        _userUpdated = new AsyncEvent<KuracordClient, UserUpdateEventArgs>("USER_UPDATED", EventExecutionLimit, EventErrorHandler);
         _clientErrored = new AsyncEvent<KuracordClient, ClientErrorEventArgs>("CLIENT_ERRORED", EventExecutionLimit, Goof);
         _guildCreated = new AsyncEvent<KuracordClient, GuildCreateEventArgs>("GUILD_CREATED", EventExecutionLimit, EventErrorHandler);
         _guildAvailable = new AsyncEvent<KuracordClient, GuildCreateEventArgs>("GUILD_AVAILABLE", EventExecutionLimit, EventErrorHandler);

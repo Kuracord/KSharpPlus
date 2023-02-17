@@ -11,6 +11,7 @@ public class KuracordUser : SnowflakeObject, IEquatable<KuracordUser> {
     internal KuracordUser() { }
 
     internal KuracordUser(KuracordUser transport) {
+        Kuracord = transport.Kuracord;
         Id = transport.Id;
         Username = transport.Username;
         Discriminator = transport.Discriminator;
