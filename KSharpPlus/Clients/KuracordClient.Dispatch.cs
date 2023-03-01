@@ -421,17 +421,18 @@ public sealed partial class KuracordClient {
     internal async Task OnUserUpdateEventAsync(KuracordUser oldUser, KuracordUser newUser) {
         oldUser.Kuracord = newUser.Kuracord = this;
         
+        //some properties are commented because server sends these fields as null instead of it real values 
         if (newUser.IsCurrent) {
             CurrentUser.AvatarUrl = newUser.AvatarUrl;
             CurrentUser.Username = newUser.Username;
             CurrentUser.Discriminator = newUser.Discriminator;
             CurrentUser.Biography = newUser.Biography;
             CurrentUser.Flags = newUser.Flags;
-            CurrentUser.Email = newUser.Email;
+            //CurrentUser.Email = newUser.Email;
             CurrentUser.IsBot = newUser.IsBot;
-            CurrentUser.Disabled = newUser.Disabled;
-            CurrentUser.Verified = newUser.Verified;
-            CurrentUser.PremiumType = newUser.PremiumType;
+            //CurrentUser.Disabled = newUser.Disabled;
+            //CurrentUser.Verified = newUser.Verified;
+            //CurrentUser.PremiumType = newUser.PremiumType;
             CurrentUser.Id = newUser.Id;
         }
 
