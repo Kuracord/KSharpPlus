@@ -23,9 +23,9 @@ public class KuracordMessage : SnowflakeObject, IEquatable<KuracordMessage> {
         Author = other.Author;
         _channel = other._channel;
         Content = other.Content;
+        CreationTimestamp = other.CreationTimestamp;
         EditedTimestamp = other.EditedTimestamp;
         Id = other.Id;
-        EditedTimestamp = other.EditedTimestamp;
     }
 
     #endregion
