@@ -39,7 +39,7 @@ public class KuracordMessage : SnowflakeObject, IEquatable<KuracordMessage> {
         get {
             _guild.Kuracord ??= Kuracord;
 
-            if (_guild.Channels.Any() && _guild.Members.Any() || Kuracord is not KuracordClient client) return _guild;
+            if (_guild.Channels.Any() && _guild.Members.Any() && _guild.Owner != null! || Kuracord is not KuracordClient client) return _guild;
 
             _guild = client.GetGuildAsync(_guild.Id).ConfigureAwait(false).GetAwaiter().GetResult();
             _guild.Kuracord = Kuracord;

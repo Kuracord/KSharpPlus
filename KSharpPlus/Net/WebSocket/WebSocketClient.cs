@@ -160,7 +160,7 @@ public class WebSocketClient : IWebSocketClient {
             using MemoryStream bs = new();
 
             while (!token.IsCancellationRequested) {
-                // See https://github.com/RogueException/Kuracord.Net/commit/ac389f5f6823e3a720aedd81b7805adbdd78b66d
+                // See https://github.com/RogueException/Discord.Net/commit/ac389f5f6823e3a720aedd81b7805adbdd78b66d
                 // for explanation on the cancellation token
 
                 WebSocketReceiveResult result;
