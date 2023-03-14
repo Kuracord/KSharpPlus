@@ -51,12 +51,10 @@ public class KuracordMember : SnowflakeObject, IEquatable<KuracordMember> {
     [JsonIgnore] public KuracordGuild Guild {
         get {
             if (_guild == null) _guild = Kuracord!.Guilds[_guildId];
+            _guild.Kuracord ??= Kuracord;
             return _guild;
-        }
-        set {
-            _guild = value;
-            _guild.Kuracord = Kuracord;
-        }
+        } 
+        set => _guild = value;
     }
 
     [JsonProperty("guild")] internal KuracordGuild? _guild;
@@ -65,11 +63,11 @@ public class KuracordMember : SnowflakeObject, IEquatable<KuracordMember> {
     /// Gets the user associated with this member.
     /// </summary>
     [JsonIgnore] public KuracordUser User {
-        get => _user;
-        internal set {
-            _user = value;
-            _user.Kuracord = Kuracord;
-        } 
+        get {
+            _user.Kuracord ??= Kuracord;
+            return _user;
+        }
+        internal set => _user = value;
     }
 
     [JsonProperty("user")] internal KuracordUser _user;
