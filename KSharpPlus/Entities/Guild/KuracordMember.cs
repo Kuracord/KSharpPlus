@@ -64,7 +64,7 @@ public class KuracordMember : SnowflakeObject, IEquatable<KuracordMember> {
     /// <summary>
     /// Gets the user associated with this member.
     /// </summary>
-    [JsonProperty("user")] public KuracordUser User {
+    [JsonIgnore] public KuracordUser User {
         get => _user;
         internal set {
             _user = value;
