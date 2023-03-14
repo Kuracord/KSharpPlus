@@ -109,7 +109,7 @@ public class KuracordUser : SnowflakeObject, IEquatable<KuracordUser> {
     /// <summary>
     /// Gets whether this user is the Client which created this object.
     /// </summary>
-    [JsonIgnore] public bool IsCurrent => Id == Kuracord!.CurrentUser.Id;
+    [JsonIgnore] public bool IsCurrent => this == Kuracord!.CurrentUser;
 
     #endregion
     
