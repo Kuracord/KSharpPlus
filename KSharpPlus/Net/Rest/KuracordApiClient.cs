@@ -66,6 +66,18 @@ public sealed class KuracordApiClient {
         return await request.WaitForCompletionAsync().ConfigureAwait(false);
     }
 
+    static string BuildQueryString(IDictionary<string, string>? values, bool post = false) {
+        if (values == null || values.Count == 0) return "";
+
+        IEnumerable<string> valuesCollection = values.Select(val => 
+            $"{WebUtility.UrlEncode(val.Key)}={WebUtility.UrlEncode(val.Value)}");
+
+        string valuesString = string.Join("&", valuesCollection);
+
+        return post ? valuesString : $"?{valuesString}";
+    }
+
+
     #region Guild
 
     internal async Task<KuracordGuild> GetGuildAsync(ulong guildId) {
@@ -246,8 +258,13 @@ public sealed class KuracordApiClient {
         return message;
     }
 
-    internal async Task<IReadOnlyList<KuracordMessage>> GetMessagesAsync(ulong guildId, ulong channelId) {
-        Uri uri = Utilities.GetApiUriFor($"{Endpoints.Guilds}/{guildId}{Endpoints.Channels}/{channelId}{Endpoints.Messages}");
+    internal async Task<IReadOnlyList<KuracordMessage>> GetMessagesAsync(ulong guildId, ulong channelId, uint limit, ulong? before = null) {
+        Dictionary<string, string> urlParams = new();
+
+        if (limit > 0) urlParams["limit"] = $"{limit}";
+        if (before != null) urlParams["before"] = $"{before}";
+    
+        Uri uri = Utilities.GetApiUriFor($"{Endpoints.Guilds}/{guildId}{Endpoints.Channels}/{channelId}{Endpoints.Messages}", BuildQueryString(urlParams));
 
         RestResponse rest = await DoRequestAsync(Kuracord, uri, RestRequestMethod.GET).ConfigureAwait(false);
         JArray messagesArr = JArray.Parse(rest.Response);

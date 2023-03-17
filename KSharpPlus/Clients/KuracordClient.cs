@@ -500,7 +500,8 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
     /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
-    public Task<IReadOnlyList<KuracordMessage>> GetMessagesAsync(KuracordChannel channel) => GetMessagesAsync(channel.Guild!.Id, channel.Id);
+    public Task<IReadOnlyList<KuracordMessage>> GetMessagesAsync(KuracordChannel channel, uint limit = 30, ulong? before = null) => 
+        GetMessagesAsync(channel.Guild!.Id, channel.Id, limit, before);
 
     /// <summary>
     /// Returns a list of messages from the last message in the channel.
@@ -510,7 +511,8 @@ public sealed partial class KuracordClient : BaseKuracordClient {
     /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
     /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
-    public Task<IReadOnlyList<KuracordMessage>> GetMessagesAsync(ulong guildId, ulong channelId) => ApiClient.GetMessagesAsync(guildId, channelId);
+    public Task<IReadOnlyList<KuracordMessage>> GetMessagesAsync(ulong guildId, ulong channelId, uint limit = 30, ulong? before = null) => 
+        ApiClient.GetMessagesAsync(guildId, channelId, limit, before);
 
     /// <summary>
     /// Deletes a message.

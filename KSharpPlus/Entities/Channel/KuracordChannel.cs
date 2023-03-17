@@ -100,7 +100,7 @@ public class KuracordChannel : SnowflakeObject, IEquatable<KuracordChannel> {
     /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>
     /// <exception cref="BadRequestException">Thrown when an invalid parameter was provided.</exception>
     /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
-    public Task<IReadOnlyList<KuracordMessage>> GetMessagesAsync() => GetMessagesInternalAsync();
+    public Task<IReadOnlyList<KuracordMessage>> GetMessagesAsync(uint limit = 30, ulong? before = null) => GetMessagesInternalAsync(limit, before);
 
     /// <summary>
     /// Edits the message.
@@ -146,10 +146,10 @@ public class KuracordChannel : SnowflakeObject, IEquatable<KuracordChannel> {
     /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
     public Task DeleteMessageAsync(ulong messageId) => Kuracord!.ApiClient.DeleteMessageAsync(Guild!.Id, Id, messageId);
     
-    Task<IReadOnlyList<KuracordMessage>> GetMessagesInternalAsync() {
+    Task<IReadOnlyList<KuracordMessage>> GetMessagesInternalAsync(uint limit = 30, ulong? before = null) {
         if (Type != ChannelType.Text) throw new ArgumentException($"Cannot get the messages of a {Type} channel.");
 
-        return Kuracord!.ApiClient.GetMessagesAsync(Guild!.Id, Id);
+        return Kuracord!.ApiClient.GetMessagesAsync(Guild!.Id, Id, limit, before);
     }
     
     /// <summary>
