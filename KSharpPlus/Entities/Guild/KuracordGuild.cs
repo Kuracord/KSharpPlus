@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using KSharpPlus.Clients;
 using KSharpPlus.Entities.Channel;
 using KSharpPlus.Entities.Channel.Message;
 using KSharpPlus.Entities.User;
@@ -10,7 +11,15 @@ using Newtonsoft.Json;
 namespace KSharpPlus.Entities.Guild; 
 
 public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
-    internal KuracordGuild() { }
+    internal KuracordGuild() {
+        if (Kuracord is KuracordClient kuracord) {
+            kuracord.UserUpdated += async (_, e) => {
+                if (!_members?.Exists(m => m.User == e.UserBefore) ?? false) return;
+
+                await GetMemberAsync(e.UserBefore.Id, true);
+            };
+        }
+    }
     
     #region Fields and Properties
 
@@ -186,12 +195,16 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     /// Gets a member of this guild by their ID.
     /// </summary>
     /// <param name="memberId">ID of the member to get.</param>
+    /// <param name="updateCache">Update member cache for this guild or not. Defaults to false.</param>
     /// <returns>The requested member.</returns>
     /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
-    public async Task<KuracordMember> GetMemberAsync(ulong memberId) {
+    public async Task<KuracordMember> GetMemberAsync(ulong memberId, bool updateCache = false) {
         if (!Members.TryGetValue(memberId, out KuracordMember? member)) {
             member = await Kuracord!.ApiClient.GetMemberAsync(Id, memberId);
-            _members!.Add(member);
+            _members?.Add(member);
+        } else if (updateCache) {
+            member = await Kuracord!.ApiClient.GetMemberAsync(Id, memberId);
+            _members?.Replace(m => m == member, member);
         }
 
         member.Kuracord ??= Kuracord;
