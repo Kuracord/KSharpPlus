@@ -438,6 +438,9 @@ public sealed partial class KuracordClient {
 
         UpdateUserCache(newUser);
 
+        foreach (KuracordGuild guild in Guilds.Values)
+            if (guild.Members.TryGetValue(oldUser.Id, out KuracordMember? member)) member.User = newUser;
+    
         UserUpdateEventArgs args = new(oldUser, newUser);
         await _userUpdated.InvokeAsync(this, args).ConfigureAwait(false);
     }

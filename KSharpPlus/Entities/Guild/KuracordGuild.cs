@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using KSharpPlus.Clients;
 using KSharpPlus.Entities.Channel;
 using KSharpPlus.Entities.Channel.Message;
 using KSharpPlus.Entities.User;
@@ -11,15 +10,7 @@ using Newtonsoft.Json;
 namespace KSharpPlus.Entities.Guild; 
 
 public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
-    internal KuracordGuild() {
-        if (Kuracord is KuracordClient kuracord) {
-            kuracord.UserUpdated += async (_, e) => {
-                if (!_members?.Exists(m => m.User == e.UserBefore) ?? false) return;
-
-                await GetMemberAsync(e.UserBefore.Id, true);
-            };
-        }
-    }
+    internal KuracordGuild() { }
     
     #region Fields and Properties
 
