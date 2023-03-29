@@ -81,11 +81,15 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     /// </summary>
     [JsonIgnore] public IReadOnlyDictionary<ulong, KuracordMember> Members {
         get {
-            if (_members == null || !_members.Any()) _members = GetMembersAsync().ConfigureAwait(false).GetAwaiter().GetResult().ToList();
+            _members ??= new List<KuracordMember>();
 
-            foreach (KuracordMember member in _members.Where(m => m.Kuracord == null)) member.Kuracord = Kuracord;
+            lock (_members) {
+                if (!_members.Any()) _members = GetMembersAsync().ConfigureAwait(false).GetAwaiter().GetResult().ToList();
 
-            return new ReadOnlyConcurrentDictionary<ulong, KuracordMember>(new ConcurrentDictionary<ulong, KuracordMember>(_members.ToDictionary(m => m.Id)));
+                foreach (KuracordMember member in _members.Where(m => m.Kuracord == null)) member.Kuracord = Kuracord;
+
+                return new ReadOnlyConcurrentDictionary<ulong, KuracordMember>(new ConcurrentDictionary<ulong, KuracordMember>(_members.ToDictionary(m => m.Id)));
+            }
         }
     }
 

@@ -712,8 +712,10 @@ public sealed partial class KuracordClient : BaseKuracordClient {
                 member._guildId = guild.Id;
 
                 UpdateUserCache(member.User);
-                
-                if (!guild._members!.Exists(m => m.Id == member.Id)) guild._members.Add(member);
+
+                lock (guild._members)
+                    if (!guild._members!.Exists(m => m.Id == member.Id))
+                        guild._members.Add(member);
             }
         }
         

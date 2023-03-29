@@ -7,6 +7,8 @@
         <Company>Kuracord</Company>
         <NeutralLanguage>en-US</NeutralLanguage>
         <Version>1.2.2</Version>
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
