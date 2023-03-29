@@ -163,7 +163,7 @@ public class KuracordMember : SnowflakeObject, IEquatable<KuracordMember> {
     /// <param name="e1">First member to compare.</param>
     /// <param name="e2">Second member to compare.</param>
     /// <returns>Whether the two members are not equal.</returns>
-    public static bool operator !=(KuracordMember e1, KuracordMember e2) => !(e1 == e2);
+    public static bool operator !=(KuracordMember? e1, KuracordMember? e2) => !(e1 == e2);
 
     #endregion
 }

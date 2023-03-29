@@ -95,6 +95,8 @@ public class KuracordChannel : SnowflakeObject, IEquatable<KuracordChannel> {
     /// <summary>
     /// Returns a list of messages from the last message in the channel.
     /// </summary>
+    /// <param name="limit">The amount of messages to fetch.</param>
+    /// <param name="before">Message to fetch before from.</param>
     /// <returns>A list of messages from the last message in the channel.</returns>
     /// <exception cref="UnauthorizedException">Thrown when the client does not have the <see cref="Permissions.ViewChannels"/> permission.</exception>
     /// <exception cref="NotFoundException">Thrown when the channel does not exist.</exception>

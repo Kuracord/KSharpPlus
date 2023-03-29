@@ -97,7 +97,7 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     /// </summary>
     [JsonIgnore] public IReadOnlyDictionary<ulong, KuracordRole> Roles {
         get {
-            if (_roles == null || !_members.Any()) _roles = new List<KuracordRole>();
+            if (_roles == null || !Members.Any()) _roles = new List<KuracordRole>();
 
             foreach (KuracordRole role in _roles.Where(r => r.Kuracord == null)) role.Kuracord = Kuracord;
 

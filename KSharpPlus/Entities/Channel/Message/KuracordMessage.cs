@@ -71,15 +71,17 @@ public class KuracordMessage : SnowflakeObject, IEquatable<KuracordMessage> {
     /// <summary>
     /// Gets the member that sent the message.
     /// </summary>
-    [JsonIgnore] public KuracordMember Member {
+    [JsonIgnore] public KuracordMember? Member {
         get {
+            if (_member == null) return _member;
+
             _member.User = Author;
-            _member.Kuracord = Kuracord;
+            _member.Kuracord ??= Kuracord;
             return _member;
         }
     }
 
-    [JsonProperty("member")] internal KuracordMember _member { get; set; } = null!;
+    [JsonProperty("member")] internal KuracordMember? _member { get; set; }
 
     /// <summary>
     /// Gets the ID of the channel in which the message was sent.

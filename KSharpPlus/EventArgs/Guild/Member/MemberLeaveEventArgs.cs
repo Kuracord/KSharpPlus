@@ -1,4 +1,5 @@
-﻿using KSharpPlus.Entities.Guild;
+﻿using KSharpPlus.Clients;
+using KSharpPlus.Entities.Guild;
 
 namespace KSharpPlus.EventArgs.Guild.Member; 
 
