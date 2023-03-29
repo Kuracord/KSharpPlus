@@ -81,20 +81,19 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     /// </summary>
     [JsonIgnore] public IReadOnlyDictionary<ulong, KuracordMember> Members {
         get {
-            _members ??= new List<KuracordMember>();
+            _members ??= new SynchronizedCollection<KuracordMember>();
 
-            lock (_members) {
-                if (!_members.Any()) _members = GetMembersAsync().ConfigureAwait(false).GetAwaiter().GetResult().ToList();
+                if (!_members.Any()) _members = new SynchronizedCollection<KuracordMember>(new object(), GetMembersAsync().ConfigureAwait(false).GetAwaiter().GetResult());
 
                 foreach (KuracordMember member in _members.Where(m => m.Kuracord == null)) member.Kuracord = Kuracord;
 
                 return new ReadOnlyConcurrentDictionary<ulong, KuracordMember>(new ConcurrentDictionary<ulong, KuracordMember>(_members.ToDictionary(m => m.Id)));
-            }
+            
         }
     }
 
     [JsonProperty("members", NullValueHandling = NullValueHandling.Ignore)]
-    internal List<KuracordMember>? _members;
+    internal SynchronizedCollection<KuracordMember>? _members;
 
     /// <summary>
     /// Gets a dictionary of all the roles associated with this guild. The dictionary's key is the role ID.
@@ -185,7 +184,7 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
             ? channel
             : await Kuracord!.ApiClient.GetChannelAsync(Id, channelId).ConfigureAwait(false);
     
-    // ReSharper disable once InvertIf
+    
     /// <summary>
     /// Gets a member of this guild by their ID.
     /// </summary>
@@ -213,7 +212,7 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
     /// <exception cref="ServerErrorException">Thrown when Kuracord is unable to process the request.</exception>
     public async Task<IReadOnlyList<KuracordMember>> GetMembersAsync() {
         IReadOnlyList<KuracordMember> members = await Kuracord!.ApiClient.GetMembersAsync(Id);
-        _members = members.ToList();
+        _members = new SynchronizedCollection<KuracordMember>(new object(), members);
         return members;
     }
 

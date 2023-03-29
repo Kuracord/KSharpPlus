@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Collections.Concurrent;
+using System.Net;
 using KSharpPlus.Clients;
 using KSharpPlus.Entities;
 using KSharpPlus.Entities.Channel;
@@ -49,7 +50,7 @@ public sealed class KuracordApiClient {
             if (guild != null!) {
                 if (guild.Members.Values.FirstOrDefault(m => m.User.Id == author.Id) == null) {
                     KuracordMember member = new(user) { Kuracord = Kuracord, _guildId = guild.Id };
-                    guild._members!.Add(member);
+                    guild._members?.Add(member);
                 }
             }
             
@@ -92,7 +93,7 @@ public sealed class KuracordApiClient {
             role._guildId = guild.Id;
         }
 
-        foreach (KuracordMember member in guild._members ??= new List<KuracordMember>()) {
+        foreach (KuracordMember member in guild._members ??= new SynchronizedCollection<KuracordMember>()) {
             member.Kuracord = Kuracord;
             member._guildId = guild.Id;
         }
@@ -123,7 +124,7 @@ public sealed class KuracordApiClient {
             role._guildId = guild.Id;
         }
 
-        foreach (KuracordMember member in guild._members ??= new List<KuracordMember>()) {
+        foreach (KuracordMember member in guild._members ??= new SynchronizedCollection<KuracordMember>()) {
             member.Kuracord = Kuracord;
             member._guildId = guild.Id;
         }
@@ -152,7 +153,7 @@ public sealed class KuracordApiClient {
             role._guildId = guild.Id;
         }
 
-        foreach (KuracordMember member in guild._members ??= new List<KuracordMember>()) {
+        foreach (KuracordMember member in guild._members ??= new SynchronizedCollection<KuracordMember>()) {
             member.Kuracord = Kuracord;
             member._guildId = guild.Id;
         }

@@ -153,7 +153,7 @@ public sealed partial class KuracordClient {
 
         guild._channels ??= new List<KuracordChannel>();
         guild._roles ??= new List<KuracordRole>();
-        guild._members ??= new List<KuracordMember>();
+        guild._members ??= new SynchronizedCollection<KuracordMember>();
 
         UpdateCachedGuild(guild, rawMembers);
 
@@ -204,7 +204,7 @@ public sealed partial class KuracordClient {
                 ShortName = gld.ShortName,
                 _isSynced = gld._isSynced,
                 _channels = gld._channels ??= new List<KuracordChannel>(),
-                _members = gld._members ??= new List<KuracordMember>(),
+                _members = gld._members ??= new SynchronizedCollection<KuracordMember>(),
                 _roles = gld._roles ??= new List<KuracordRole>()
             };
         }
@@ -216,7 +216,7 @@ public sealed partial class KuracordClient {
 
         guild._channels ??= new List<KuracordChannel>();
         guild._roles ??= new List<KuracordRole>();
-        guild._members ??= new List<KuracordMember>();
+        guild._members ??= new SynchronizedCollection<KuracordMember>();
             
         UpdateCachedGuild(eventGuild, rawMembers);
 
@@ -377,7 +377,7 @@ public sealed partial class KuracordClient {
 
         UpdateUserCache(member.User);
         
-        if (!guild._members!.Exists(m => m.Id == member.Id)) guild._members.Add(member);
+        if (guild._members!.All(m => m.Id != member.Id)) guild._members?.Add(member);
 
         MemberJoinedEventArgs args = new(member, guild);
         
@@ -393,7 +393,8 @@ public sealed partial class KuracordClient {
 
         if (!guild.Members.TryGetValue(memberAfter.Id, out KuracordMember? memberBefore)) memberBefore = memberAfter;
 
-        guild._members!.RemoveAll(m => m.Id == memberBefore.Id);
+        foreach (KuracordMember mbr in guild._members!.Where(m => m == memberBefore)) guild._members?.Remove(mbr);
+        
         guild._members!.Add(memberAfter);
 
         MemberUpdatedEventArgs args = new(memberBefore, memberAfter, guild);
@@ -404,9 +405,9 @@ public sealed partial class KuracordClient {
     internal async Task OnMemberLeaveEventAsync(KuracordMember member, KuracordGuild guild) {
         member.Kuracord = this;
         member._guildId = guild.Id;
-        
-        guild._members!.RemoveAll(m => m.Id == member.Id);
 
+        foreach (KuracordMember mbr in guild._members!.Where(m => m == member)) guild._members?.Remove(mbr);
+        
         UpdateUserCache(member.User);
 
         MemberLeaveEventArgs args = new(member, guild);

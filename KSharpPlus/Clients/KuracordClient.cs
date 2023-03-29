@@ -686,7 +686,7 @@ public sealed partial class KuracordClient : BaseKuracordClient {
         if (_disposed) return;
 
         newGuild._channels ??= new List<KuracordChannel>();
-        newGuild._members ??= new List<KuracordMember>();
+        newGuild._members ??= new SynchronizedCollection<KuracordMember>();
         newGuild._roles ??= new List<KuracordRole>();
         
         if (!_guilds.ContainsKey(newGuild.Id)) _guilds[newGuild.Id] = newGuild;
@@ -703,7 +703,7 @@ public sealed partial class KuracordClient : BaseKuracordClient {
                 
 
         if (rawMembers != null) {
-            guild._members ??= new List<KuracordMember>();
+            guild._members ??= new SynchronizedCollection<KuracordMember>();
             guild._members.Clear();
 
             foreach (JToken rawMember in rawMembers) {
@@ -713,9 +713,8 @@ public sealed partial class KuracordClient : BaseKuracordClient {
 
                 UpdateUserCache(member.User);
 
-                lock (guild._members)
-                    if (!guild._members!.Exists(m => m.Id == member.Id))
-                        guild._members.Add(member);
+                if (guild._members!.All(m => m.Id != member.Id))
+                    guild._members.Add(member);
             }
         }
         

@@ -16,6 +16,7 @@
       <dependency id="Emzi0767.Common" version="2.6.6"/>
       <dependency id="Microsoft.Extensions.Logging" version="7.0.0"/>
       <dependency id="Newtonsoft.Json" version="13.0.2"/>
+      <dependency id="System.ServiceModel.Primitives" version="6.0.0-preview1.23060.3"/>
     </dependencies>
   </metadata>
 </package>

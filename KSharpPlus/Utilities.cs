@@ -100,14 +100,16 @@ public static class Utilities {
         task.ContinueWith(t => logger.Log(level, eventId, t.Exception, message), TaskContinuationOptions.OnlyOnFaulted);
     }
     
-    public static List<T> Replace<T>(this List<T> source, Predicate<T> predicate, T newValue) {
+    public static IEnumerable<T> Replace<T>(this IEnumerable<T> source, Predicate<T> predicate, T newValue) {
         if (source == null) throw new ArgumentNullException(nameof(source));
         if (predicate == null) throw new ArgumentNullException(nameof(predicate));
         if (newValue == null) throw new ArgumentNullException(nameof(newValue));
 
-        int index = source.FindIndex(predicate);
-        if (index != -1) source[index] = newValue;
+        List<T> list = source.ToList();
+        
+        int index = list.FindIndex(predicate);
+        if (index != -1) list[index] = newValue;
 
-        return source;
+        return list;
     }
 }
