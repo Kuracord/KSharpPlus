@@ -108,8 +108,12 @@ public sealed partial class KuracordClient {
                 ulong memberId = (ulong)data["memberId"]!;
                 guildId = (ulong)data["guildId"]!;
 
-                if (userId != CurrentUser.Id) member = await GetGuildMemberAsync(guildId, memberId).ConfigureAwait(false);
-                else member = _guilds[guildId].Members[memberId];
+                if (!_guilds.ContainsKey(guildId)) {
+                    if (userId != CurrentUser.Id) Logger.LogError(LoggerEvents.WebSocketReceive, $"Could not find {guildId} in guild cache");
+                    return;
+                }
+
+                member = _guilds[guildId].Members[memberId];
 
                 await OnMemberLeaveEventAsync(member, _guilds[guildId]).ConfigureAwait(false);
                 break;
@@ -406,7 +410,7 @@ public sealed partial class KuracordClient {
         member.Kuracord = this;
         member._guildId = guild.Id;
 
-        foreach (KuracordMember mbr in guild._members!.Where(m => m == member)) guild._members?.Remove(mbr);
+        guild._members?.Remove(member);
         
         UpdateUserCache(member.User);
 

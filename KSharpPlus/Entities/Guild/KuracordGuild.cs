@@ -83,12 +83,10 @@ public class KuracordGuild : SnowflakeObject, IEquatable<KuracordGuild> {
         get {
             _members ??= new SynchronizedCollection<KuracordMember>();
 
-                if (!_members.Any()) _members = new SynchronizedCollection<KuracordMember>(new object(), GetMembersAsync().ConfigureAwait(false).GetAwaiter().GetResult());
+            if (!_members.Any()) _members = new SynchronizedCollection<KuracordMember>(new object(), GetMembersAsync().ConfigureAwait(false).GetAwaiter().GetResult());
+            foreach (KuracordMember member in _members.Where(m => m.Kuracord == null)) member.Kuracord = Kuracord;
 
-                foreach (KuracordMember member in _members.Where(m => m.Kuracord == null)) member.Kuracord = Kuracord;
-
-                return new ReadOnlyConcurrentDictionary<ulong, KuracordMember>(new ConcurrentDictionary<ulong, KuracordMember>(_members.ToDictionary(m => m.Id)));
-            
+            return new ReadOnlyConcurrentDictionary<ulong, KuracordMember>(new ConcurrentDictionary<ulong, KuracordMember>(_members.ToDictionary(m => m.Id)));
         }
     }
 
