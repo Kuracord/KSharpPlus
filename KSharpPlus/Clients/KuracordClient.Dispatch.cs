@@ -397,9 +397,7 @@ public sealed partial class KuracordClient {
 
         if (!guild.Members.TryGetValue(memberAfter.Id, out KuracordMember? memberBefore)) memberBefore = memberAfter;
 
-        foreach (KuracordMember mbr in guild._members!.Where(m => m == memberBefore)) guild._members?.Remove(mbr);
-        
-        guild._members!.Add(memberAfter);
+        guild._members?.Replace(m => m == memberBefore, memberAfter);
 
         MemberUpdatedEventArgs args = new(memberBefore, memberAfter, guild);
 
